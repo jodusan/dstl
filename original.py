@@ -30,12 +30,13 @@ smooth = 1e-12
 
 def _convert_coordinates_to_raster(coords, img_size, xymax):
     """
-    Pretvara koordinate od npr poligona iz originalne velicine u zeljenu velicinu slike, gde je img_size zeljena velicina,
-    a xymax maksimalna velicine slike
+    Pretvara koordinate iz formata 0-1 u format koji odgovara velicini i lokaciji slike
     Input:
     - coords: matrica koordinata
     - img_size: tupl H i W zeljenje velicine
-    - xymax: tupl koji sadrzi maksimalnu velicinu slike
+    - xymax: tupl koji sadrzi koordinate slike
+    Return:
+    - listu koordinata skaliranu po zeljenoj velicini
     """
     # __author__ = visoft
     # https://www.kaggle.com/visoft/dstl-satellite-imagery-feature-detection/export-pixel-wise-mask
