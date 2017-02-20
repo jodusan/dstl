@@ -60,6 +60,15 @@ def _get_xmax_ymin(grid_sizes_panda, imageId):
 
 
 def _get_polygon_list(wkt_list_pandas, imageId, cType):
+    """
+    Gets the poligons from training file
+    Input:
+    - wkt_list_pandas: panda objekat sa otvorenim csv fajlom training seta
+    - imageId: id slike
+    - tip klase (1-10)
+    Return:
+    - Lista poligona iz csv-a
+    """
     # __author__ = visoft
     # https://www.kaggle.com/visoft/dstl-satellite-imagery-feature-detection/export-pixel-wise-mask
     df_image = wkt_list_pandas[wkt_list_pandas.ImageId == imageId]
