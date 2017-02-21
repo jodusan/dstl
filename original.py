@@ -111,6 +111,15 @@ def _get_and_convert_contours(polygonList, raster_img_size, xymax):
 def _plot_mask_from_contours(raster_img_size, contours, class_value=1):
     # __author__ = visoft
     # https://www.kaggle.com/visoft/dstl-satellite-imagery-feature-detection/export-pixel-wise-mask
+    """
+    Plot mask from polygon contours.
+    Input:
+    - raster_img_size: size of the raster image we want (ie. 500x500)
+    - contours: tuple of (outer_polygons, inner_polygons)
+    - class_value: Value 0-255 defining color where 0=white, 255=black
+    Return:
+    - img_mask: 2d array mask of polygons
+    """
     img_mask = np.zeros(raster_img_size, np.uint8)
     if contours is None:
         return img_mask
