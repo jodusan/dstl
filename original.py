@@ -269,35 +269,55 @@ def stick_all_train():
 
 
 def get_patches(img, msk, amt=10000, aug=True):
+    """
+    Returns patches of shape (ISZ, ISZ) from the big picture.
+    ISZ - side length of square patch
+    Input:
+        - img: images of shape (W, H, num channels) (usually 4175, 4175, 8)
+        - msk: label masks of shape (W, H, num classes) (usually 4175, 4175, 10)
+        - amt: integer for how many patches we want
+        - aug: boolean on whether to augment by flipping image vertically or horizontaly
+    Return:
+        - x: images of shape (N, num channels, ISZ, ISZ)
+        - y: masks of shape (N, num classes, ISZ, ISZ)
+    """
     is2 = int(1.0 * ISZ)
-    xm, ym = img.shape[0] - is2, img.shape[1] - is2
+    xm = img.shape[0] - is2
+    ym = img.shape[1] - is2
 
     x, y = [], []
 
+    # Threshold for every of 10 classes
     tr = [0.4, 0.1, 0.1, 0.15, 0.3, 0.95, 0.1, 0.05, 0.001, 0.005]
+
     for i in range(amt):
-        xc = random.randint(0, xm)
-        yc = random.randint(0, ym)
+        xc = random.randint(0, xm)  # Get random upper left corner of square patch
+        yc = random.randint(0, ym)  # x and y values
 
-        im = img[xc:xc + is2, yc:yc + is2]
-        ms = msk[xc:xc + is2, yc:yc + is2]
+        im = img[xc:xc + is2, yc:yc + is2]  # Get square patch starting from xc, yc
+        ms = msk[xc:xc + is2, yc:yc + is2]  # with length of is2
 
+        # For every class, loop and see if it passes threshold
         for j in range(N_Cls):
             sm = np.sum(ms[:, :, j])
             if 1.0 * sm / is2 ** 2 > tr[j]:
                 if aug:
+                    # 0.5 chance to flip it horizontal
                     if random.uniform(0, 1) > 0.5:
                         im = im[::-1]
                         ms = ms[::-1]
+                    # 0.5 chance to flip it verticaly
                     if random.uniform(0, 1) > 0.5:
                         im = im[:, ::-1]
                         ms = ms[:, ::-1]
 
                 x.append(im)
                 y.append(ms)
+                # TODO: add break because it adds unnecessarly many times the same im and ms
 
     x, y = 2 * np.transpose(x, (0, 3, 1, 2)) - 1, np.transpose(y, (0, 3, 1, 2))
-    print x.shape, y.shape, np.amax(x), np.amin(x), np.amax(y), np.amin(y)
+    print "[get_patches] Requested ", amt, " patches. Generated ", x.shape[0], " patches of size ", ISZ, "x", ISZ
+    # print x.shape, y.shape, np.amax(x), np.amin(x), np.amax(y), np.amin(y)
     return x, y
 
 
