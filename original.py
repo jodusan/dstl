@@ -55,6 +55,15 @@ def _convert_coordinates_to_raster(coords, img_size, xymax):
 def _get_xmax_ymin(grid_sizes_panda, imageId):
     # __author__ = visoft
     # https://www.kaggle.com/visoft/dstl-satellite-imagery-feature-detection/export-pixel-wise-mask
+    """
+    Gets xmax and ymin for a given imageId from grid_sizes.csv(grid_sizes_panda variable) file.
+    Input:
+    - grid_sizes_panda: pandas object that contains whole grid_sizes.csv file of shape (450,3)
+    - imageId: id of image we are getting xmax and ymin
+
+    Return:
+    - xmax, ymin: tuple of values for imageId
+    """
     xmax, ymin = grid_sizes_panda[grid_sizes_panda.ImageId == imageId].iloc[0, 1:].astype(float)
     return (xmax, ymin)
 
