@@ -90,6 +90,13 @@ def _get_polygon_list(wkt_list_pandas, imageId, cType):
 
 
 def _get_and_convert_contours(polygonList, raster_img_size, xymax):
+    """
+    Makes a list of exterior and interior polygons
+    Input:
+    - polygonList: list of multipolygons
+    - raster_img_size: velicina slika sa kojima radimo
+    - xymax: xymax za trenutnu sliku
+    """
     # __author__ = visoft
     # https://www.kaggle.com/visoft/dstl-satellite-imagery-feature-detection/export-pixel-wise-mask
     perim_list = []
@@ -151,6 +158,13 @@ def generate_mask_for_image_and_class(raster_size, imageId, class_type, grid_siz
 
 
 def M(image_id):
+    """
+    Opens the tiff image
+    Input:
+    - image_id: id of the image
+    Returns:
+    - img: image in the form of HxWx8 if the image is sixteen band
+    """
     # __author__ = amaia
     # https://www.kaggle.com/aamaia/dstl-satellite-imagery-feature-detection/rgb-using-m-bands-example
     filename = os.path.join(inDir, 'sixteen_band', '{}_M.tif'.format(image_id))
@@ -160,6 +174,16 @@ def M(image_id):
 
 
 def stretch_n(bands, lower_percent=5, higher_percent=95):
+    """
+    Rasiri (po vrednostima) svaki band slike kako bi se videlo vise detalja,
+    odseca najvisih i najnizih 5% sa default vrednostima
+    Input:
+    - bands: slika
+    - lower_percent: donji percentil
+    - higher_percent: gonji percentil
+    Returns:
+    - out: Rasirena slika, HxWxBands
+    """
     out = np.zeros_like(bands)
     n = bands.shape[2]
     for i in range(n):
@@ -171,6 +195,9 @@ def stretch_n(bands, lower_percent=5, higher_percent=95):
         t[t < a] = a
         t[t > b] = b
         out[:, :, i] = t
+        # Sacuva bandove slike pre i posle strech_n u folder bands, napraviti folder pre odkomentarisanja!!
+        # cv2.imwrite("bands/band"+str(i)+".png", bands[:, :, i]*255)
+        # #cv2.imwrite("bands/out"+str(i)+".png", t*255)
 
     return out.astype(np.float32)
 
@@ -192,7 +219,6 @@ def jaccard_coef(y_true, y_pred):
 
     return K.mean(jac)
 
-
 def jaccard_coef_int(y_true, y_pred):
     # __author__ = Vladimir Iglovikov
     """
@@ -212,25 +238,29 @@ def jaccard_coef_int(y_true, y_pred):
 
 
 def stick_all_train():
+    """
+    Sticks all training images into one giant image (835*5=4175 x and y dimension),
+    does this also to the masks. It saves the results into the the data folder.
+    """
     print "let's stick all imgs together"
-    s = 835
+    s = 835  # image size
 
-    x = np.zeros((5 * s, 5 * s, 8))
-    y = np.zeros((5 * s, 5 * s, N_Cls))
+    x = np.zeros((5 * s, 5 * s, 8))  # Train sticked image
+    y = np.zeros((5 * s, 5 * s, N_Cls))  # Label masks sticked image
 
-    ids = sorted(DF.ImageId.unique())
+    ids = sorted(DF.ImageId.unique())  # All image ids
     print len(ids)
     for i in range(5):
         for j in range(5):
             id = ids[5 * i + j]
 
-            img = M(id)
-            img = stretch_n(img)
+            img = M(id)  # Loads image
+            img = stretch_n(img)  # Stretches bands
             print img.shape, id, np.amax(img), np.amin(img)
-            x[s * i:s * i + s, s * j:s * j + s, :] = img[:s, :s, :]
+            x[s * i:s * i + s, s * j:s * j + s, :] = img[:s, :s, :]  # Gets a location from the sticked image and fills it with the current image
             for z in range(N_Cls):
                 y[s * i:s * i + s, s * j:s * j + s, z] = generate_mask_for_image_and_class(
-                    (img.shape[0], img.shape[1]), id, z + 1)[:s, :s]
+                    (img.shape[0], img.shape[1]), id, z + 1)[:s, :s]  # Gets a location from the sticked mask and fills it with the mask of current image
 
     print np.amax(y), np.amin(y)
 
@@ -292,6 +322,9 @@ def get_patches(img, msk, amt=10000, aug=True):
 
 
 def make_val():
+    """
+    Makes a validation dataset using patches from main image
+    """
     print "let's pick some samples for validation"
     img = np.load('data/x_trn_%d.npy' % N_Cls)
     msk = np.load('data/y_trn_%d.npy' % N_Cls)
@@ -346,7 +379,15 @@ def get_unet():
 
 
 def calc_jacc(model):
-    img = np.load('data/x_tmp_%d.npy' % N_Cls)
+    """
+    Tries to predict image from validation and returns the jacc score
+    Inputs:
+    - model: the trained model
+    Returns:
+    - score: the average jacc score from all classes
+    - trs: class thresholds
+    """
+    img = np.load('data/x_tmp_%d.npy' % N_Cls)  # Opens validation dataset
     msk = np.load('data/y_tmp_%d.npy' % N_Cls)
 
     prd = model.predict(img, batch_size=4)
