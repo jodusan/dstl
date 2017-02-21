@@ -132,6 +132,17 @@ def _plot_mask_from_contours(raster_img_size, contours, class_value=1):
 def generate_mask_for_image_and_class(raster_size, imageId, class_type, grid_sizes_panda=GS, wkt_list_pandas=DF):
     # __author__ = visoft
     # https://www.kaggle.com/visoft/dstl-satellite-imagery-feature-detection/export-pixel-wise-mask
+    """
+    Generate image mask for a given class.
+    Input:
+    - raster_img_size: size of the raster image we want (ie. 500x500)
+    - imageId: id of image we want
+    - class_type: class integer describing our class
+    - grid_sizes_panda: pandas object that contains whole grid_sizes.csv file of shape (450,3)
+    - wkt_list_pandas: pandas object that contains whole train_wkt_v4.csv file of shape (250, 3)
+    Return:
+    - img_mask: 2d array mask of polygons for given class
+    """
     xymax = _get_xmax_ymin(grid_sizes_panda, imageId)
     polygon_list = _get_polygon_list(wkt_list_pandas, imageId, class_type)
     contours = _get_and_convert_contours(polygon_list, raster_size, xymax)
