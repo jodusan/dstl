@@ -379,6 +379,14 @@ def calc_jacc(model):
 def mask_for_polygons(polygons, im_size):
     # __author__ = Konstantin Lopuhin
     # https://www.kaggle.com/lopuhin/dstl-satellite-imagery-feature-detection/full-pipeline-demo-poly-pixels-ml-poly
+    """
+    Returns integer based mask for given polygons. If no polygons detected returns empty mask.
+    Input:
+        - polygons: Multipolygon object
+        - im_size: (W,H) width and hight of image ( ie. 837, 851)
+    Return:
+        - img_mask: generated mask for im_size
+    """
     img_mask = np.zeros(im_size, np.uint8)
     if not polygons:
         return img_mask
