@@ -33,6 +33,8 @@ def batchnorm_forward(x, gamma, beta, bn_param):
   Returns a tuple of:
   - out: of shape (N, D)
   - cache: A tuple of values needed in the backward pass
+  
+  https://medium.com/@karpathy/yes-you-should-understand-backprop-e2f06eab496b
   """
   mode = bn_param['mode']
   eps = bn_param.get('eps', 1e-5)
