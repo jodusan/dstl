@@ -177,6 +177,14 @@ def stretch_n(bands, lower_percent=5, higher_percent=95):
 
 def jaccard_coef(y_true, y_pred):
     # __author__ = Vladimir Iglovikov
+    """
+
+    Input:
+    - y_true: true labels, theano/tensorflow tensor
+    - y_pred: predictions, theano/tensorflow tensor of same shape as y_true
+    Return: single tensor value representing the mean of the ouput array across all datapoints
+    -
+    """
     intersection = K.sum(y_true * y_pred, axis=[0, -1, -2])
     sum_ = K.sum(y_true + y_pred, axis=[0, -1, -2])
 
@@ -187,6 +195,14 @@ def jaccard_coef(y_true, y_pred):
 
 def jaccard_coef_int(y_true, y_pred):
     # __author__ = Vladimir Iglovikov
+    """
+    Same as jaccard_coef but clips values to integers.
+    Input:
+    - y_true: true labels, theano/tensorflow tensor
+    - y_pred: predictions, theano/tensorflow tensor of same shape as y_true
+    Return: single tensor value representing the mean of the ouput array across all datapoints
+    -
+    """
     y_pred_pos = K.round(K.clip(y_pred, 0, 1))
 
     intersection = K.sum(y_true * y_pred_pos, axis=[0, -1, -2])
