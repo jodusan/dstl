@@ -219,7 +219,6 @@ def jaccard_coef(y_true, y_pred):
 
     return K.mean(jac)
 
-
 def jaccard_coef_int(y_true, y_pred):
     # __author__ = Vladimir Iglovikov
     """
@@ -239,6 +238,10 @@ def jaccard_coef_int(y_true, y_pred):
 
 
 def stick_all_train():
+    """
+    Sticks all training images into one giant image (835*5=4175 x and y dimension),
+    does this also to the masks. It saves the results into the the data folder.
+    """
     print "let's stick all imgs together"
     s = 835  # image size
 
@@ -257,7 +260,7 @@ def stick_all_train():
             x[s * i:s * i + s, s * j:s * j + s, :] = img[:s, :s, :]  # Gets a location from the sticked image and fills it with the current image
             for z in range(N_Cls):
                 y[s * i:s * i + s, s * j:s * j + s, z] = generate_mask_for_image_and_class(
-                    (img.shape[0], img.shape[1]), id, z + 1)[:s, :s]  # Gets a location from the sticked mask and fills it with the current mask
+                    (img.shape[0], img.shape[1]), id, z + 1)[:s, :s]  # Gets a location from the sticked mask and fills it with the mask of current image
 
     print np.amax(y), np.amin(y)
 
@@ -299,6 +302,9 @@ def get_patches(img, msk, amt=10000, aug=True):
 
 
 def make_val():
+    """
+    Makes a validation dataset using patches from main image
+    """
     print "let's pick some samples for validation"
     img = np.load('data/x_trn_%d.npy' % N_Cls)
     msk = np.load('data/y_trn_%d.npy' % N_Cls)
@@ -353,7 +359,15 @@ def get_unet():
 
 
 def calc_jacc(model):
-    img = np.load('data/x_tmp_%d.npy' % N_Cls)
+    """
+    Tries to predict image from validation and returns the jacc score
+    Inputs:
+    - model: the trained model
+    Returns:
+    - score: the average jacc score from all classes
+    - trs: class thresholds
+    """
+    img = np.load('data/x_tmp_%d.npy' % N_Cls)  # Opens validation dataset
     msk = np.load('data/y_tmp_%d.npy' % N_Cls)
 
     prd = model.predict(img, batch_size=4)
