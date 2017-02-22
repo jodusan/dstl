@@ -13,7 +13,7 @@ from utils import N_Cls, M, stretch_n, ISZ, SB, inDir, GS
 from train_model import get_unet, calc_jacc
 
 
-def predict_id(id, model, trs):
+def predict_image(id, model, trs):
     """
     Predicts one image with id, for model, with trs
     Inputs:
@@ -45,12 +45,11 @@ def predict_id(id, model, trs):
     return prd[:, :img.shape[0], :img.shape[1]]
 
 
-def predict_test(model, trs):
-    print "predict test"
-    for i, id in enumerate(sorted(set(SB['ImageId'].tolist()))):
-        print len(sorted(set(SB['ImageId'].tolist())))
-        print sorted(set(SB['ImageId'].tolist()))
-        msk = predict_id(id, model, trs)
+def predict_test_images(model, trs):
+    enumerated_list = enumerate(sorted(set(SB['ImageId'].tolist())))
+    print "[predict test] Trying to predict", len(enumerated_list), "images"
+    for i, id in enumerated_list:
+        msk = predict_image(id, model, trs)
         np.save('msk/10_%s' % id, msk)
         if i % 100 == 0: print i, id
 
@@ -153,8 +152,9 @@ def get_scalers(im_size, x_max, y_min):
     h_ = 1.0 * h * (h / (h + 1))
     return w_ / x_max, h_ / y_min
 
+
 model = get_unet()
 model.load_weights(sys.argv[1])
 score, trs = calc_jacc(model)
-predict_test(model, trs)
+predict_test_images(model, trs)
 make_submit()

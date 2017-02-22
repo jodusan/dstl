@@ -1,4 +1,5 @@
 import numpy as np
+import sys
 from keras.models import Model
 from keras.layers import Input, merge, Convolution2D, MaxPooling2D, UpSampling2D, Reshape, core, Dropout
 from keras.optimizers import Adam
@@ -7,6 +8,9 @@ from keras import backend as K
 from sklearn.metrics import jaccard_similarity_score
 
 from utils import N_Cls, get_patches, ISZ, smooth
+
+batch_size = 4
+num_epoch = 3
 
 
 def train_net():
@@ -19,23 +23,28 @@ def train_net():
     img = np.load('data/x_trn_%d.npy' % N_Cls)
     msk = np.load('data/y_trn_%d.npy' % N_Cls)
 
-    x_trn, y_trn = get_patches(img, msk, amt=50)
+    x_trn, y_trn = get_patches(img, msk, amt=3000)
 
     model = get_unet()
-    # model.load_weights('weights/unet_10_jk0.7878')
+    if (sys.argc > 1):
+        model.load_weights(sys.argv[1])
+
     print "[train_net] Training started"
     model_checkpoint = ModelCheckpoint('weights/unet_tmp.hdf5', monitor='loss', save_best_only=True)
     for i in range(1):
-        model.fit(x_trn, y_trn, batch_size=2, nb_epoch=1, verbose=1, shuffle=True,
+        model.fit(x_trn, y_trn, batch_size=batch_size, nb_epoch=num_epoch, verbose=1, shuffle=True,
                   callbacks=[model_checkpoint], validation_data=(x_val, y_val))
         del x_trn
         del y_trn
         score, trs = calc_jacc(model)
-        model.save_weights('weights/unet_10_jk%.4f' % score)
+        model.save_weights('weights/unet_10_%d_%d_jk%.4f' % batch_size, num_epoch, score)
         # x_trn, y_trn = get_patches(img, msk)
 
     return model
 
+
+def jaccard_coef_loss(y_true, y_pred):
+    return -jaccard_coef(y_true, y_pred)
 
 
 def get_unet():
@@ -78,7 +87,7 @@ def get_unet():
     conv10 = Convolution2D(N_Cls, 1, 1, activation='sigmoid')(conv9)
 
     model = Model(input=inputs, output=conv10)
-    model.compile(optimizer=Adam(), loss='binary_crossentropy', metrics=[jaccard_coef, jaccard_coef_int, 'accuracy'])
+    model.compile(optimizer=Adam(), loss=jaccard_coef_loss, metrics=[jaccard_coef, jaccard_coef_int, 'accuracy'])
     return model
 
 
@@ -98,6 +107,7 @@ def jaccard_coef(y_true, y_pred):
     jac = (intersection + smooth) / (sum_ - intersection + smooth)
 
     return K.mean(jac)
+
 
 def calc_jacc(model):
     """
@@ -137,6 +147,7 @@ def calc_jacc(model):
     score = sum(avg) / 10.0
     return score, trs
 
+
 def jaccard_coef_int(y_true, y_pred):
     # __author__ = Vladimir Iglovikov
     """
@@ -153,6 +164,7 @@ def jaccard_coef_int(y_true, y_pred):
     sum_ = K.sum(y_true + y_pred, axis=[0, -1, -2])
     jac = (intersection + smooth) / (sum_ - intersection + smooth)
     return K.mean(jac)
+
 
 if __name__ == '__main__':
     train_net()

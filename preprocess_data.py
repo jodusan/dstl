@@ -47,7 +47,7 @@ def make_val():
     print "let's pick some samples for validation"
     img = np.load('data/x_trn_%d.npy' % N_Cls)
     msk = np.load('data/y_trn_%d.npy' % N_Cls)
-    x, y = get_patches(img, msk, amt=50)
+    x, y = get_patches(img, msk, amt=600)
 
     np.save('data/x_tmp_%d' % N_Cls, x)
     np.save('data/y_tmp_%d' % N_Cls, y)
