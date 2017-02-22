@@ -1,7 +1,3 @@
-# from predict_and_submit import calc_jacc, predict_id, predict_test, mask_to_polygons, make_submit
-# from train_model import train_net, get_unet
-
-import matplotlib.pyplot as plt
 import numpy as np
 import cv2
 import pandas as pd
