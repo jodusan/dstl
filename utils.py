@@ -12,6 +12,7 @@ GS = pd.read_csv(inDir + '/grid_sizes.csv', names=['ImageId', 'Xmax', 'Ymin'], s
 SB = pd.read_csv(os.path.join(inDir, 'sample_submission.csv'))
 ISZ = 160
 smooth = 1e-12
+dice_coef_smooth = 1
 batch_size = 4
 num_epoch = 3
 validation_patches = 600

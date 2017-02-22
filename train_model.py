@@ -8,7 +8,7 @@ from keras.models import Model
 from keras.optimizers import Adam
 from sklearn.metrics import jaccard_similarity_score
 
-from utils import N_Cls, get_patches, ISZ, smooth, batch_size, num_epoch, train_patches
+from utils import N_Cls, get_patches, ISZ, smooth, batch_size, num_epoch, train_patches, dice_coef_smooth
 
 
 def train_net():
@@ -49,8 +49,25 @@ def dice_coef(y_true, y_pred):
     y_true_f = K.flatten(y_true)
     y_pred_f = K.flatten(y_pred)
     intersection = K.sum(y_true_f * y_pred_f)
-    return (2. * intersection + smooth) / (K.sum(y_true_f) + K.sum(y_pred_f) + smooth)
+    return (2. * intersection + dice_coef_smooth) / (K.sum(y_true_f) + K.sum(y_pred_f) + dice_coef_smooth)
 
+
+def jaccard_coef(y_true, y_pred):
+    # __author__ = Vladimir Iglovikov
+    """
+
+    Input:
+    - y_true: true labels, theano/tensorflow tensor
+    - y_pred: predictions, theano/tensorflow tensor of same shape as y_true
+    Return: single tensor value representing the mean of the ouput array across all datapoints
+    -
+    """
+    intersection = K.sum(y_true * y_pred, axis=[0, -1, -2])
+    sum_ = K.sum(y_true + y_pred, axis=[0, -1, -2])
+
+    jac = (intersection + smooth) / (sum_ - intersection + smooth)
+
+    return K.mean(jac)
 
 def dice_coef_loss(y_true, y_pred):
     return -dice_coef(y_true, y_pred)
@@ -100,22 +117,6 @@ def get_unet():
     return model
 
 
-def jaccard_coef(y_true, y_pred):
-    # __author__ = Vladimir Iglovikov
-    """
-
-    Input:
-    - y_true: true labels, theano/tensorflow tensor
-    - y_pred: predictions, theano/tensorflow tensor of same shape as y_true
-    Return: single tensor value representing the mean of the ouput array across all datapoints
-    -
-    """
-    intersection = K.sum(y_true * y_pred, axis=[0, -1, -2])
-    sum_ = K.sum(y_true + y_pred, axis=[0, -1, -2])
-
-    jac = (intersection + smooth) / (sum_ - intersection + smooth)
-
-    return K.mean(jac)
 
 
 def calc_jacc(model):
