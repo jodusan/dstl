@@ -10,9 +10,8 @@ def stick_all_train():
     Sticks all training images into one giant image (835*5=4175 x and y dimension),
     does this also to the masks. It saves the results into the the data folder.
     """
-    print "[stick_all_train] Sticking all images together"
     s = 835  # image size
-    print "number of images = ", 5*5, " size of final image: ", 5*s
+    print "[stick_all_train] number of images =", 5 * 5, "size of final image:", 5 * s
 
     x = np.zeros((5 * s, 5 * s, 8))  # Train sticked image
     y = np.zeros((5 * s, 5 * s, N_Cls))  # Label masks sticked image
@@ -26,16 +25,18 @@ def stick_all_train():
             img = M(id)  # Loads image
             img = stretch_n(img)  # Stretches bands
             print img.shape, id, np.amax(img), np.amin(img)
-            x[s * i:s * i + s, s * j:s * j + s, :] = img[:s, :s,
-                                                     :]  # Gets a location from the sticked image and fills it with the current image
+            # Gets a location from the sticked image and fills it with the current image
+            x[s * i:s * i + s, s * j:s * j + s, :] = img[:s, :s, :]
             for z in range(N_Cls):
-                y[s * i:s * i + s, s * j:s * j + s, z] = generate_mask_for_image_and_class(
-                    (img.shape[0], img.shape[1]), id, z + 1)[:s,
-                                                         :s]  # Gets a location from the sticked mask and fills it with the mask of current image
+                # Gets a location from the sticked mask and fills it with the mask of current image
+                y[s * i:s * i + s, s * j:s * j + s, z] =\
+                    generate_mask_for_image_and_class((img.shape[0], img.shape[1]), id, z + 1)[:s, :s]
 
     print np.amax(y), np.amin(y)
 
+    print "Saving image to data"
     np.save('data/x_trn_%d' % N_Cls, x)
+    print "Moving parts... lol"
     np.save('data/y_trn_%d' % N_Cls, y)
 
 

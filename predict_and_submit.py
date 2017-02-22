@@ -48,6 +48,8 @@ def predict_id(id, model, trs):
 def predict_test(model, trs):
     print "predict test"
     for i, id in enumerate(sorted(set(SB['ImageId'].tolist()))):
+        print len(sorted(set(SB['ImageId'].tolist())))
+        print sorted(set(SB['ImageId'].tolist()))
         msk = predict_id(id, model, trs)
         np.save('msk/10_%s' % id, msk)
         if i % 100 == 0: print i, id
@@ -68,7 +70,7 @@ def mask_to_polygons(mask, epsilon=5, min_area=1.):
     # https://www.kaggle.com/lopuhin/dstl-satellite-imagery-feature-detection/full-pipeline-demo-poly-pixels-ml-poly
 
     # first, find contours with cv2: it's much faster than shapely
-    image, contours, hierarchy = cv2.findContours(
+    contours, hierarchy = cv2.findContours(
         ((mask == 1) * 255).astype(np.uint8),
         cv2.RETR_CCOMP, cv2.CHAIN_APPROX_TC89_KCOS)
     # create approximate contours to have reasonable submission size

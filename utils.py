@@ -116,7 +116,7 @@ def get_patches(img, msk, amt=10000, aug=True):
     return x, y
 
 
-def mask_for_polygons(polygons, im_size):
+def polygons_to_mask(polygons, im_size):
     # __author__ = Konstantin Lopuhin
     # https://www.kaggle.com/lopuhin/dstl-satellite-imagery-feature-detection/full-pipeline-demo-poly-pixels-ml-poly
     """
