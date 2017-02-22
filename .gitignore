@@ -1,10 +1,6 @@
 inputs/sixteen_band
 inputs/three_band
-
-!data/README.md
-!msk/README.md
-!weights/README.md
-!subm/README.md
+inputs/.*
 
 # Created by https://www.gitignore.io/api/linux,pycharm,intellij,python
 
