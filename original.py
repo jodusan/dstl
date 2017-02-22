@@ -537,6 +537,13 @@ def train_net():
 
 
 def predict_id(id, model, trs):
+    """
+    Predicts one image with id, for model, with trs
+    Inputs:
+    - id: M image id
+    - model: model to predict on
+    - trs: image threshold on which to make a binary mask (less than =0, more than =1)
+    """
     img = M(id)
     x = stretch_n(img)
 
@@ -570,7 +577,10 @@ def predict_test(model, trs):
 
 
 def make_submit():
-    print "make submission file"
+    """
+    Make a submission file
+    """
+    print "[make_submit] Making a submissions file"
     df = pd.read_csv(os.path.join(inDir, 'sample_submission.csv'))
     print df.head()
     for idx, row in df.iterrows():
