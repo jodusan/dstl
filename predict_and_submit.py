@@ -47,7 +47,6 @@ def predict_image(id, model, trs):
 
 def predict_test_images(model, trs):
     enumerated_list = enumerate(sorted(set(SB['ImageId'].tolist())))
-    print "[predict test] Trying to predict", len(enumerated_list), "images"
     for i, id in enumerated_list:
         msk = predict_image(id, model, trs)
         np.save('msk/10_%s' % id, msk)
