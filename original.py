@@ -219,6 +219,7 @@ def jaccard_coef(y_true, y_pred):
 
     return K.mean(jac)
 
+
 def jaccard_coef_int(y_true, y_pred):
     # __author__ = Vladimir Iglovikov
     """
@@ -257,10 +258,12 @@ def stick_all_train():
             img = M(id)  # Loads image
             img = stretch_n(img)  # Stretches bands
             print img.shape, id, np.amax(img), np.amin(img)
-            x[s * i:s * i + s, s * j:s * j + s, :] = img[:s, :s, :]  # Gets a location from the sticked image and fills it with the current image
+            x[s * i:s * i + s, s * j:s * j + s, :] = img[:s, :s,
+                                                     :]  # Gets a location from the sticked image and fills it with the current image
             for z in range(N_Cls):
                 y[s * i:s * i + s, s * j:s * j + s, z] = generate_mask_for_image_and_class(
-                    (img.shape[0], img.shape[1]), id, z + 1)[:s, :s]  # Gets a location from the sticked mask and fills it with the mask of current image
+                    (img.shape[0], img.shape[1]), id, z + 1)[:s,
+                                                         :s]  # Gets a location from the sticked mask and fills it with the mask of current image
 
     print np.amax(y), np.amin(y)
 
@@ -513,7 +516,12 @@ def get_scalers(im_size, x_max, y_min):
 
 
 def train_net():
-    print "start train net"
+    """
+    Loads train and validation data, gets patches and fits a model.
+    Returns:
+        - model: trained model
+    """
+    print "[train_net] Training started"
     x_val, y_val = np.load('data/x_tmp_%d.npy' % N_Cls), np.load('data/y_tmp_%d.npy' % N_Cls)
     img = np.load('data/x_trn_%d.npy' % N_Cls)
     msk = np.load('data/y_trn_%d.npy' % N_Cls)
@@ -528,10 +536,9 @@ def train_net():
                   callbacks=[model_checkpoint], validation_data=(x_val, y_val))
         del x_trn
         del y_trn
-        x_trn, y_trn = get_patches(img, msk)
-        score, trs = calc_jacc(model)
-        print 'val jk', score
-        model.save_weights('weights/unet_10_jk%.4f' % score)
+        # x_trn, y_trn = get_patches(img, msk)
+        # score, trs = calc_jacc(model)
+        # model.save_weights('weights/unet_10_jk%.4f' % score)
 
     return model
 
