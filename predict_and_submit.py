@@ -48,8 +48,6 @@ def predict_id(id, model, trs):
 def predict_test(model, trs):
     print "predict test"
     for i, id in enumerate(sorted(set(SB['ImageId'].tolist()))):
-        print len(sorted(set(SB['ImageId'].tolist())))
-        print sorted(set(SB['ImageId'].tolist()))
         msk = predict_id(id, model, trs)
         np.save('msk/10_%s' % id, msk)
         if i % 100 == 0: print i, id
