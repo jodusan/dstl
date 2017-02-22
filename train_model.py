@@ -24,7 +24,7 @@ def train_net():
     x_trn, y_trn = get_patches(img, msk, amt=train_patches)
 
     model = get_unet()
-    if (sys.argc > 1):
+    if (len(sys.argv) > 1):
         model.load_weights(sys.argv[1])
 
     print "[train_net] Training started"
