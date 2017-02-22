@@ -2,7 +2,7 @@ import cv2
 import numpy as np
 from shapely.wkt import loads as wkt_loads
 
-from utils import N_Cls, DF, M, stretch_n, get_patches, GS
+from utils import N_Cls, DF, M, stretch_n, get_patches, GS, validation_patches
 
 
 def stick_all_train():
@@ -47,7 +47,7 @@ def make_val():
     print "let's pick some samples for validation"
     img = np.load('data/x_trn_%d.npy' % N_Cls)
     msk = np.load('data/y_trn_%d.npy' % N_Cls)
-    x, y = get_patches(img, msk, amt=600)
+    x, y = get_patches(img, msk, amt=validation_patches)
 
     np.save('data/x_tmp_%d' % N_Cls, x)
     np.save('data/y_tmp_%d' % N_Cls, y)

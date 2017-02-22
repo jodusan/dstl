@@ -16,6 +16,10 @@ GS = pd.read_csv(inDir + '/grid_sizes.csv', names=['ImageId', 'Xmax', 'Ymin'], s
 SB = pd.read_csv(os.path.join(inDir, 'sample_submission.csv'))
 ISZ = 160
 smooth = 1e-12
+batch_size = 4
+num_epoch = 3
+validation_patches = 600
+train_patches = 3000
 
 
 def M(image_id):
@@ -138,28 +142,28 @@ def polygons_to_mask(polygons, im_size):
     cv2.fillPoly(img_mask, interiors, 0)
     return img_mask
 
-#
-# def check_predict(id='6120_2_3'):
-#     model = get_unet()
-#     model.load_weights('weights/unet_10_jk0.7878')
-#
-#     msk = predict_id(id, model, [0.4, 0.1, 0.4, 0.3, 0.3, 0.5, 0.3, 0.6, 0.1, 0.1])
-#     img = M(id)
-#
-#     plt.figure()
-#     ax1 = plt.subplot(131)
-#     ax1.set_title('image ID:6120_2_3')
-#     ax1.imshow(img[:, :, 5], cmap=plt.get_cmap('gist_ncar'))
-#     ax2 = plt.subplot(132)
-#     ax2.set_title('predict bldg pixels')
-#     ax2.imshow(msk[0], cmap=plt.get_cmap('gray'))
-#     ax3 = plt.subplot(133)
-#     ax3.set_title('predict bldg polygones')
-#     ax3.imshow(mask_for_polygons(mask_to_polygons(msk[0], epsilon=1), img.shape[:2]), cmap=plt.get_cmap('gray'))
-#
-#     plt.show()
+    #
+    # def check_predict(id='6120_2_3'):
+    #     model = get_unet()
+    #     model.load_weights('weights/unet_10_jk0.7878')
+    #
+    #     msk = predict_id(id, model, [0.4, 0.1, 0.4, 0.3, 0.3, 0.5, 0.3, 0.6, 0.1, 0.1])
+    #     img = M(id)
+    #
+    #     plt.figure()
+    #     ax1 = plt.subplot(131)
+    #     ax1.set_title('image ID:6120_2_3')
+    #     ax1.imshow(img[:, :, 5], cmap=plt.get_cmap('gist_ncar'))
+    #     ax2 = plt.subplot(132)
+    #     ax2.set_title('predict bldg pixels')
+    #     ax2.imshow(msk[0], cmap=plt.get_cmap('gray'))
+    #     ax3 = plt.subplot(133)
+    #     ax3.set_title('predict bldg polygones')
+    #     ax3.imshow(mask_for_polygons(mask_to_polygons(msk[0], epsilon=1), img.shape[:2]), cmap=plt.get_cmap('gray'))
+    #
+    #     plt.show()
 
 
-# if __name__ == '__main__':
-#     # bonus
-#     check_predict()
+    # if __name__ == '__main__':
+    #     # bonus
+    #     check_predict()

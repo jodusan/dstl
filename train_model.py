@@ -1,16 +1,14 @@
-import numpy as np
 import sys
-from keras.models import Model
-from keras.layers import Input, merge, Convolution2D, MaxPooling2D, UpSampling2D, Reshape, core, Dropout
-from keras.optimizers import Adam
-from keras.callbacks import ModelCheckpoint, LearningRateScheduler
+
+import numpy as np
 from keras import backend as K
+from keras.callbacks import ModelCheckpoint
+from keras.layers import Input, merge, Convolution2D, MaxPooling2D, UpSampling2D
+from keras.models import Model
+from keras.optimizers import Adam
 from sklearn.metrics import jaccard_similarity_score
 
-from utils import N_Cls, get_patches, ISZ, smooth
-
-batch_size = 4
-num_epoch = 3
+from utils import N_Cls, get_patches, ISZ, smooth, batch_size, num_epoch, train_patches
 
 
 def train_net():
@@ -23,7 +21,7 @@ def train_net():
     img = np.load('data/x_trn_%d.npy' % N_Cls)
     msk = np.load('data/y_trn_%d.npy' % N_Cls)
 
-    x_trn, y_trn = get_patches(img, msk, amt=3000)
+    x_trn, y_trn = get_patches(img, msk, amt=train_patches)
 
     model = get_unet()
     if (sys.argc > 1):
