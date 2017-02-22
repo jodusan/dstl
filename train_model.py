@@ -42,7 +42,7 @@ def train_net():
 
 
 def jaccard_coef_loss(y_true, y_pred):
-    return 1/jaccard_coef(y_true, y_pred)
+    return 1 / jaccard_coef(y_true, y_pred)
 
 
 def dice_coef(y_true, y_pred):
@@ -68,6 +68,7 @@ def jaccard_coef(y_true, y_pred):
     jac = (intersection + smooth) / (sum_ - intersection + smooth)
 
     return K.mean(jac)
+
 
 def dice_coef_loss(y_true, y_pred):
     return -dice_coef(y_true, y_pred)
@@ -115,8 +116,6 @@ def get_unet():
     model = Model(input=inputs, output=conv10)
     model.compile(optimizer=Adam(), loss=jaccard_coef_loss, metrics=[jaccard_coef, jaccard_coef_int, 'accuracy'])
     return model
-
-
 
 
 def calc_jacc(model):
