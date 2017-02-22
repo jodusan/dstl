@@ -444,6 +444,16 @@ def mask_for_polygons(polygons, im_size):
 
 
 def mask_to_polygons(mask, epsilon=5, min_area=1.):
+    """
+    Pravi (multi)poligone od output slike mreze
+    Input:
+    - mask: mask image
+    - epsilon: margin of error
+    - min_area: minimal area for polygon
+
+    Returns:
+    - all_polygons: all polygons found in mask
+    """
     # __author__ = Konstantin Lopuhin
     # https://www.kaggle.com/lopuhin/dstl-satellite-imagery-feature-detection/full-pipeline-demo-poly-pixels-ml-poly
 
@@ -487,6 +497,15 @@ def mask_to_polygons(mask, epsilon=5, min_area=1.):
 
 
 def get_scalers(im_size, x_max, y_min):
+    """
+    Scale image back to xycoordinates
+    Inputs:
+    - im_size: tuple of image size (h,w)
+    - x_max: x max coordinates for image
+    - y_min: y min coordinates for image
+    Returns:
+    - Tuple of values by which to scale image
+    """
     # __author__ = Konstantin Lopuhin
     # https://www.kaggle.com/lopuhin/dstl-satellite-imagery-feature-detection/full-pipeline-demo-poly-pixels-ml-poly
     h, w = im_size  # they are flipped so that mask_for_polygons works correctly
