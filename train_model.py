@@ -24,7 +24,7 @@ def train_net():
     x_trn, y_trn = get_patches(img, msk, amt=train_patches)
 
     model = get_unet()
-    if (len(sys.argv) > 1):
+    if len(sys.argv) > 1:
         model.load_weights(sys.argv[1])
 
     print "[train_net] Training started"
@@ -35,14 +35,25 @@ def train_net():
         del x_trn
         del y_trn
         score, trs = calc_jacc(model)
-        model.save_weights('weights/unet_10_%d_%d_jk%.4f' % batch_size, num_epoch, score)
+        model.save_weights('weights/unet_10_%d_%d_jk%.4f' % (batch_size, num_epoch, score))
         # x_trn, y_trn = get_patches(img, msk)
 
     return model
 
 
 def jaccard_coef_loss(y_true, y_pred):
-    return -jaccard_coef(y_true, y_pred)
+    return 1/jaccard_coef(y_true, y_pred)
+
+
+def dice_coef(y_true, y_pred):
+    y_true_f = K.flatten(y_true)
+    y_pred_f = K.flatten(y_pred)
+    intersection = K.sum(y_true_f * y_pred_f)
+    return (2. * intersection + smooth) / (K.sum(y_true_f) + K.sum(y_pred_f) + smooth)
+
+
+def dice_coef_loss(y_true, y_pred):
+    return -dice_coef(y_true, y_pred)
 
 
 def get_unet():
