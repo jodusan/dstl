@@ -9,8 +9,8 @@ import shapely.affinity
 import shapely.wkt
 from shapely.geometry import MultiPolygon, Polygon
 
-from utils import N_Cls, M, stretch_n, SB, inDir, GS
-from config import ISZ
+from utils import N_Cls, M, stretch_n, SB, inDir, GS, combined_images
+from config import ISZ, image_size, image_depth
 from train_model import get_unet, calc_jacc
 
 
@@ -22,11 +22,11 @@ def predict_image(id, model, trs):
     - model: model to predict on
     - trs: image threshold on which to make a binary mask (less than =0, more than =1)
     """
-    img = M(id)
+    img = combined_images(id, image_size)
     x = stretch_n(img)
 
-    cnv = np.zeros((960, 960, 8)).astype(np.float32)
-    prd = np.zeros((N_Cls, 960, 960)).astype(np.float32)
+    cnv = np.zeros((image_size+125, image_size+125, image_depth)).astype(np.float32)
+    prd = np.zeros((N_Cls, image_size+125, image_size+125)).astype(np.float32)
     cnv[:img.shape[0], :img.shape[1], :] = x
 
     for i in range(0, 6):
