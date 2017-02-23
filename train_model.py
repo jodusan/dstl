@@ -118,7 +118,7 @@ def get_unet():
     conv10 = Convolution2D(N_Cls, 1, 1, activation='sigmoid')(conv9)
 
     model = Model(input=inputs, output=conv10)
-    model.compile(optimizer=optimizer, loss='binary_crossentropy',
+    model.compile(optimizer=optimizer, loss=jaccard_coef_loss,
                   metrics=[jaccard_coef_loss, jaccard_coef_int, dice_coef_loss])
     return model
 
