@@ -59,7 +59,6 @@ def P(image_id):
     # https://www.kaggle.com/aamaia/dstl-satellite-imagery-feature-detection/rgb-using-m-bands-example
     filename = os.path.join(inDir, 'sixteen_band', '{}_P.tif'.format(image_id))
     img = tiff.imread(filename)
-    img = np.rollaxis(img, 0, 3)
     return img
 
 
