@@ -10,7 +10,7 @@ from sklearn.metrics import jaccard_similarity_score
 
 from utils import N_Cls, get_patches
 from config import ISZ, smooth, dice_coef_smooth, batch_size, num_epoch, train_patches, learning_rate, beta_1, beta_2, \
-    epsilon
+    epsilon, image_depth
 
 optimizer = Adam(lr=learning_rate, beta_1=beta_1, beta_2=beta_2, epsilon=epsilon)
 
@@ -79,7 +79,7 @@ def dice_coef_loss(y_true, y_pred):
 
 
 def get_unet():
-    inputs = Input((8, ISZ, ISZ))
+    inputs = Input((image_depth, ISZ, ISZ))
     conv1 = Convolution2D(32, 3, 3, activation='relu', border_mode='same')(inputs)
     conv1 = Convolution2D(32, 3, 3, activation='relu', border_mode='same')(conv1)
     pool1 = MaxPooling2D(pool_size=(2, 2))(conv1)

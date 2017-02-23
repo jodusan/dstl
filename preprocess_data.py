@@ -2,8 +2,8 @@ import cv2
 import numpy as np
 from shapely.wkt import loads as wkt_loads
 
-from utils import N_Cls, DF, M, stretch_n, get_patches, GS
-from config import validation_patches
+from utils import N_Cls, DF, stretch_n, get_patches, GS, combined_images
+from config import validation_patches, image_size, image_depth
 
 
 def stick_all_train():
@@ -11,27 +11,27 @@ def stick_all_train():
     Sticks all training images into one giant image (835*5=4175 x and y dimension),
     does this also to the masks. It saves the results into the the data folder.
     """
-    s = 835  # image size
+    s = image_size  # image size
     print "[stick_all_train] number of images =", 5 * 5, "size of final image:", 5 * s
 
-    x = np.zeros((5 * s, 5 * s, 8))  # Train sticked image
+    x = np.zeros((5 * s, 5 * s, image_depth))  # Train sticked image
     y = np.zeros((5 * s, 5 * s, N_Cls))  # Label masks sticked image
 
     ids = sorted(DF.ImageId.unique())  # All image ids
     print len(ids)
     for i in range(5):
         for j in range(5):
-            id = ids[5 * i + j]
+            image_id = ids[5 * i + j]
 
-            img = M(id)  # Loads image
+            img = combined_images(image_id, image_size)  # Loads all image bands with image_size size
             img = stretch_n(img)  # Stretches bands
-            print img.shape, id, np.amax(img), np.amin(img)
+            print img.shape, image_id, np.amax(img), np.amin(img)
             # Gets a location from the sticked image and fills it with the current image
             x[s * i:s * i + s, s * j:s * j + s, :] = img[:s, :s, :]
             for z in range(N_Cls):
                 # Gets a location from the sticked mask and fills it with the mask of current image
                 y[s * i:s * i + s, s * j:s * j + s, z] =\
-                    generate_mask_for_image_and_class((img.shape[0], img.shape[1]), id, z + 1)[:s, :s]
+                    generate_mask_for_image_and_class((img.shape[0], img.shape[1]), image_id, z + 1)[:s, :s]
 
     print np.amax(y), np.amin(y)
 

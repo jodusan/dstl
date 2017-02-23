@@ -5,6 +5,8 @@ batch_size = 4
 num_epoch = 10
 validation_patches = 800
 train_patches = 5000
+image_size = 835
+image_depth = 20
 
 # optimizer paramteters
 learning_rate = 0.001
