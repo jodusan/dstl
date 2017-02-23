@@ -10,6 +10,8 @@ from sklearn.metrics import jaccard_similarity_score
 
 from utils import N_Cls, get_patches, ISZ, smooth, batch_size, num_epoch, train_patches, dice_coef_smooth
 
+optimizer = Adam(lr=1e-5, beta_1=0.9, beta_2=0.999, epsilon=1e-08, decay=0.0)
+
 
 def train_net():
     """
@@ -50,6 +52,15 @@ def dice_coef(y_true, y_pred):
     y_pred_f = K.flatten(y_pred)
     intersection = K.sum(y_true_f * y_pred_f)
     return (2. * intersection + dice_coef_smooth) / (K.sum(y_true_f) + K.sum(y_pred_f) + dice_coef_smooth)
+
+
+def calc_jacc_test2(y_true, y_pred):
+
+    intersection = np.sum(y_true * y_pred, axis=(0, -1, -2))
+    sum_ = np.sum(y_true + y_pred, axis=(0, -1, -2))
+    jrk = (intersection + smooth) / (sum_ - intersection + smooth)
+
+    return np.mean(jrk)
 
 
 def jaccard_coef(y_true, y_pred):
@@ -114,7 +125,8 @@ def get_unet():
     conv10 = Convolution2D(N_Cls, 1, 1, activation='sigmoid')(conv9)
 
     model = Model(input=inputs, output=conv10)
-    model.compile(optimizer=Adam(), loss=jaccard_coef_loss, metrics=[jaccard_coef, jaccard_coef_int, 'accuracy'])
+    model.compile(optimizer=optimizer, loss='binary_crossentropy',
+                  metrics=[jaccard_coef_loss, jaccard_coef_int, dice_coef_loss, calc_jacc_test2])
     return model
 
 
