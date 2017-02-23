@@ -54,15 +54,6 @@ def dice_coef(y_true, y_pred):
     return (2. * intersection + dice_coef_smooth) / (K.sum(y_true_f) + K.sum(y_pred_f) + dice_coef_smooth)
 
 
-def calc_jacc_test2(y_true, y_pred):
-
-    intersection = np.sum(y_true * y_pred, axis=(0, -1, -2))
-    sum_ = np.sum(y_true + y_pred, axis=(0, -1, -2))
-    jrk = (intersection + smooth) / (sum_ - intersection + smooth)
-
-    return np.mean(jrk)
-
-
 def jaccard_coef(y_true, y_pred):
     # __author__ = Vladimir Iglovikov
     """
@@ -126,7 +117,7 @@ def get_unet():
 
     model = Model(input=inputs, output=conv10)
     model.compile(optimizer=optimizer, loss='binary_crossentropy',
-                  metrics=[jaccard_coef_loss, jaccard_coef_int, dice_coef_loss, calc_jacc_test2])
+                  metrics=[jaccard_coef_loss, jaccard_coef_int, dice_coef_loss])
     return model
 
 
