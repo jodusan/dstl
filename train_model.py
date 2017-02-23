@@ -8,9 +8,11 @@ from keras.models import Model
 from keras.optimizers import Adam
 from sklearn.metrics import jaccard_similarity_score
 
-from utils import N_Cls, get_patches, ISZ, smooth, batch_size, num_epoch, train_patches, dice_coef_smooth
+from utils import N_Cls, get_patches, smooth, batch_size, num_epoch, train_patches, dice_coef_smooth
+from config import ISZ, smooth, dice_coef_smooth, batch_size, num_epoch, train_patches, learning_rate, beta_1, beta_2, \
+    epsilon
 
-optimizer = Adam(lr=1e-5, beta_1=0.9, beta_2=0.999, epsilon=1e-08)
+optimizer = Adam(lr=learning_rate, beta_1=beta_1, beta_2=beta_2, epsilon=epsilon)
 
 
 def train_net():

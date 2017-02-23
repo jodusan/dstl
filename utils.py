@@ -1,22 +1,18 @@
-import numpy as np
-import cv2
-import pandas as pd
-import tifffile as tiff
 import os
+import pandas as pd
 import random
+
+import cv2
+import numpy as np
+import tifffile as tiff
+
+from config import ISZ
 
 N_Cls = 10
 inDir = 'inputs'
 DF = pd.read_csv(inDir + '/train_wkt_v4.csv')
 GS = pd.read_csv(inDir + '/grid_sizes.csv', names=['ImageId', 'Xmax', 'Ymin'], skiprows=1)
 SB = pd.read_csv(os.path.join(inDir, 'sample_submission.csv'))
-ISZ = 160
-smooth = 1e-12
-dice_coef_smooth = 1
-batch_size = 4
-num_epoch = 10
-validation_patches = 800
-train_patches = 5000
 
 
 def M(image_id):
@@ -46,7 +42,7 @@ def stretch_n(bands, lower_percent=5, higher_percent=95):
     Returns:
     - out: Rasirena slika, HxWxBands
     """
-    out = np.zeros_like(bands)
+    out = np.zeros_like(bands).astype(np.float32)
     n = bands.shape[2]
     for i in range(n):
         a = 0  # np.min(band)

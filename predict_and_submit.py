@@ -9,7 +9,8 @@ import shapely.affinity
 import shapely.wkt
 from shapely.geometry import MultiPolygon, Polygon
 
-from utils import N_Cls, M, stretch_n, ISZ, SB, inDir, GS
+from utils import N_Cls, M, stretch_n, SB, inDir, GS
+from config import ISZ
 from train_model import get_unet, calc_jacc
 
 
