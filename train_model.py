@@ -8,7 +8,7 @@ from keras.models import Model
 from keras.optimizers import Adam
 from sklearn.metrics import jaccard_similarity_score
 
-from utils import N_Cls, get_patches, smooth, batch_size, num_epoch, train_patches, dice_coef_smooth
+from utils import N_Cls, get_patches
 from config import ISZ, smooth, dice_coef_smooth, batch_size, num_epoch, train_patches, learning_rate, beta_1, beta_2, \
     epsilon
 
@@ -31,7 +31,7 @@ def train_net():
     if len(sys.argv) > 1:
         model.load_weights(sys.argv[1])
 
-    print "[train_net] Training started"
+    print "[train_net] Training started with: batch size:", batch_size, "optimizer lr:", learning_rate
     model_checkpoint = ModelCheckpoint('weights/unet_tmp.hdf5', monitor='loss', save_best_only=True)
     for i in range(1):
         model.fit(x_trn, y_trn, batch_size=batch_size, nb_epoch=num_epoch, verbose=1, shuffle=True,
