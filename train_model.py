@@ -10,7 +10,7 @@ from sklearn.metrics import jaccard_similarity_score
 
 from utils import N_Cls, get_patches, ISZ, smooth, batch_size, num_epoch, train_patches, dice_coef_smooth
 
-optimizer = Adam(lr=1e-5, beta_1=0.9, beta_2=0.999, epsilon=1e-08, decay=0.0)
+optimizer = Adam(lr=1e-5, beta_1=0.9, beta_2=0.999, epsilon=1e-08)
 
 
 def train_net():
