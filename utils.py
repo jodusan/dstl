@@ -6,7 +6,7 @@ import cv2
 import numpy as np
 import tifffile as tiff
 
-from config import ISZ
+from config import ISZ, image_size
 
 N_Cls = 10
 inDir = 'inputs'
@@ -151,8 +151,23 @@ def get_patches(img, msk, amt=10000, aug=True):
     tr = [0.4, 0.1, 0.1, 0.15, 0.3, 0.95, 0.1, 0.05, 0.001, 0.005]
 
     for i in range(amt):
-        xc = random.randint(0, xm)  # Get random upper left corner of square patch
-        yc = random.randint(0, ym)  # x and y values
+           
+        bad_coords = True
+        bad_count = 0
+        
+        while(bad_coords):
+            xc = random.randint(0, xm)  # Get random upper left corner of square patch
+            yc = random.randint(0, ym)  # x and y values
+            
+            # Exclude list for testing
+            exclude = [8, 10, 12, 6, 17]
+            for excl in exclude:
+                if xc >= excl/5*image_size-ISZ and xc <= excl/5*image_size+image_size and yc >= excl%5*image_size-ISZ and yc <= (excl%5)*image_size+image_size:
+                    bad_coords=True
+                    bad_count+=1
+                    break
+                else:
+                    bad_coords=False              
 
         im = img[xc:xc + is2, yc:yc + is2]  # Get square patch starting from xc, yc
         ms = msk[xc:xc + is2, yc:yc + is2]  # with length of is2
