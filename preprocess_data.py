@@ -3,7 +3,7 @@ import numpy as np
 from shapely.wkt import loads as wkt_loads
 
 from utils import N_Cls, DF, stretch_n, get_patches, GS, combined_images
-from config import validation_patches, image_size, image_depth
+from config import validation_patches, image_size, image_depth, generate_label_masks
 
 
 def stick_all_train():
@@ -34,7 +34,10 @@ def stick_all_train():
                     generate_mask_for_image_and_class((img.shape[0], img.shape[1]), image_id, z + 1)[:s, :s]
 
     print np.amax(y), np.amin(y)
-
+    if generate_label_masks:
+        cv2.imwrite("views/preprocess/concat-5x5.png",x[:,:,1]*255)
+        for i in range(10):
+            cv2.imwrite("views/preprocess/maska"+str(i)+".png", y[:,:,i]*255)
     print "Saving image to data"
     np.save('data/x_trn_%d' % N_Cls, x)
     print "Moving parts... lol"
@@ -185,4 +188,4 @@ def generate_mask_for_image_and_class(raster_size, imageId, class_type, grid_siz
 
 if __name__ == '__main__':
     stick_all_train()
-    make_val()
+    #make_val()
