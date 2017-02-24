@@ -29,9 +29,9 @@ def predict_image(id, model, trs):
     prd = np.zeros((N_Cls, image_size, image_size)).astype(np.float32)
     cnv[:img.shape[0], :img.shape[1], :] = img_streched
 
-    for i in range(0, np.floor(image_size / ISZ)):
+    for i in range(0, np.floor(image_size / ISZ).astype(np.int32)):
         line = []
-        for j in range(0, np.floor(image_size / ISZ)):
+        for j in range(0, np.floor(image_size / ISZ).astype(np.int32)):
             line.append(cnv[i * ISZ:(i + 1) * ISZ, j * ISZ:(j + 1) * ISZ])
 
         # transposes image to feed into predict, where the dimensions are: (num_samples, depth, x, y)

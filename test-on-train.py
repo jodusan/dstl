@@ -25,8 +25,8 @@ def predict_image(id, model, trs):
     img = combined_images(id, image_size)
     x = stretch_n(img)
     print "Img shape", img.shape
-    cnv = np.zeros((image_size+125, image_size+125, image_depth)).astype(np.float32)
-    prd = np.zeros((N_Cls, image_size+125, image_size+125)).astype(np.float32)
+    cnv = np.zeros((image_size + 125, image_size + 125, image_depth)).astype(np.float32)
+    prd = np.zeros((N_Cls, image_size + 125, image_size + 125)).astype(np.float32)
     cnv[:img.shape[0], :img.shape[1], :] = x
 
     for i in range(0, 6):
@@ -48,14 +48,15 @@ def predict_image(id, model, trs):
 
 def predict_test_images(model, trs):
     enumerated_list = enumerate(sorted(DF.ImageId.unique()))
-    large_img = np.zeros((10, image_size*5, image_size*5)).astype(np.float32)
+    large_img = np.zeros((10, image_size * 5, image_size * 5)).astype(np.float32)
     for i, id in enumerated_list:
         msk = predict_image(id, model, trs)
-        large_img[:,i/5*image_size:i/5*image_size+image_size,i%5*image_size:(i%5)*image_size+image_size] = msk
+        large_img[:, i / 5 * image_size:i / 5 * image_size + image_size,
+        i % 5 * image_size:(i % 5) * image_size + image_size] = msk
         if i % 100 == 0:
             print i, id
     for f in range(10):
-            cv2.imwrite("views/predict_test_images/Mask"+str(f+1)+".png", large_img[f,:,:]*255)
+        cv2.imwrite("views/predict_test_images/Mask" + str(f + 1) + ".png", large_img[f, :, :] * 255)
 
 
 def mask_to_polygons(mask, epsilon=5, min_area=1.):
@@ -161,4 +162,4 @@ model = get_unet()
 model.load_weights(sys.argv[1])
 score, trs = calc_jacc(model)
 predict_test_images(model, trs)
-#make_submit()
+# make_submit()
