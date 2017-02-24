@@ -23,19 +23,20 @@ def predict_image(id, model, trs):
     - trs: image threshold on which to make a binary mask (less than =0, more than =1)
     """
     img = combined_images(id, image_size)
-    x = stretch_n(img)
+    img_streched = stretch_n(img)
 
-    cnv = np.zeros((image_size+125, image_size+125, image_depth)).astype(np.float32)
-    prd = np.zeros((N_Cls, image_size+125, image_size+125)).astype(np.float32)
-    cnv[:img.shape[0], :img.shape[1], :] = x
+    cnv = np.zeros((image_size, image_size, image_depth)).astype(np.float32)
+    prd = np.zeros((N_Cls, image_size, image_size)).astype(np.float32)
+    cnv[:img.shape[0], :img.shape[1], :] = img_streched
 
-    for i in range(0, 6):
+    for i in range(0, np.floor(image_size / ISZ)):
         line = []
-        for j in range(0, 6):
+        for j in range(0, np.floor(image_size / ISZ)):
             line.append(cnv[i * ISZ:(i + 1) * ISZ, j * ISZ:(j + 1) * ISZ])
 
-        x = 2 * np.transpose(line, (0, 3, 1, 2)) - 1
-        tmp = model.predict(x, batch_size=4)
+        # transposes image to feed into predict, where the dimensions are: (num_samples, depth, x, y)
+        norm_patches = 2 * np.transpose(line, (0, 3, 1, 2)) - 1  # it also normalises image to [-1,1]
+        tmp = model.predict(norm_patches, batch_size=4)
         for j in range(tmp.shape[0]):
             prd[:, i * ISZ:(i + 1) * ISZ, j * ISZ:(j + 1) * ISZ] = tmp[j]
 
@@ -51,7 +52,8 @@ def predict_test_images(model, trs):
     for i, id in enumerated_list:
         msk = predict_image(id, model, trs)
         np.save('msk/10_%s' % id, msk)
-        if i % 100 == 0: print i, id
+        if i % 100 == 0:
+            print i, id
 
 
 def mask_to_polygons(mask, epsilon=5, min_area=1.):
