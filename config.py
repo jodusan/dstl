@@ -14,5 +14,5 @@ beta_1 = 0.9
 beta_2 = 0.999
 epsilon = 1e-08
 
-#misc
-generate_label_masks=False
+# misc
+generate_label_masks = False

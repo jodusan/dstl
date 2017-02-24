@@ -188,4 +188,4 @@ def generate_mask_for_image_and_class(raster_size, imageId, class_type, grid_siz
 
 if __name__ == '__main__':
     stick_all_train()
-    #make_val()
+    make_val()
