@@ -6,7 +6,7 @@ import cv2
 import numpy as np
 import tifffile as tiff
 
-from config import ISZ, image_size
+from config import ISZ, image_size, test_nums
 
 N_Cls = 10
 inDir = 'inputs'
@@ -84,13 +84,13 @@ def combined_images(image_id, image_size):
 
     img_a = A(image_id)
     img_a_resize = cv2.resize(img_a, (image_size, image_size))
-    
+
     img_p = P(image_id)
     img_p_resize = cv2.resize(img_p, (image_size, image_size))
-    
+
     img_rgb = rgb(image_id)
     img_rgb_resize = cv2.resize(img_rgb, (image_size, image_size))
-    
+
     image = np.zeros((img_rgb_resize.shape[0], img_rgb_resize.shape[1], 20), 'uint8')
     image[..., 0:3] = img_rgb_resize
     image[..., 3] = img_p_resize
@@ -147,27 +147,28 @@ def get_patches(img, msk, amt=10000, aug=True):
 
     x, y = [], []
 
-    # Threshold for every of 10 classes
+    # Threshold for every of 10 classes TODO: promeniti na klasama koje lose predvidjamo
     tr = [0.4, 0.1, 0.1, 0.15, 0.3, 0.95, 0.1, 0.05, 0.001, 0.005]
 
     for i in range(amt):
-           
+
         bad_coords = True
         bad_count = 0
-        
-        while(bad_coords):
+
+        while (bad_coords):
             xc = random.randint(0, xm)  # Get random upper left corner of square patch
             yc = random.randint(0, ym)  # x and y values
-            
+
             # Exclude list for testing
-            exclude = [8, 10, 12, 6, 17]
+            exclude = test_nums
             for excl in exclude:
-                if xc >= excl/5*image_size-ISZ and xc <= excl/5*image_size+image_size and yc >= excl%5*image_size-ISZ and yc <= (excl%5)*image_size+image_size:
-                    bad_coords=True
-                    bad_count+=1
+                if excl / 5 * image_size - ISZ <= xc <= excl / 5 * image_size + image_size and excl % 5 * image_size - ISZ <= yc <= (
+                            excl % 5) * image_size + image_size:
+                    bad_coords = True
+                    bad_count += 1
                     break
                 else:
-                    bad_coords=False              
+                    bad_coords = False
 
         im = img[xc:xc + is2, yc:yc + is2]  # Get square patch starting from xc, yc
         ms = msk[xc:xc + is2, yc:yc + is2]  # with length of is2
@@ -188,12 +189,23 @@ def get_patches(img, msk, amt=10000, aug=True):
 
                 x.append(im)
                 y.append(ms)
-                # TODO: add break because it adds unnecessarly many times the same im and ms
+                # TODO: add break because it adds unnecessarily many times the same im and ms
 
     x, y = 2 * np.transpose(x, (0, 3, 1, 2)) - 1, np.transpose(y, (0, 3, 1, 2))
     print "[get_patches] Requested ", amt, " patches. Generated ", x.shape[0], " patches of size ", ISZ, "x", ISZ
     # print x.shape, y.shape, np.amax(x), np.amin(x), np.amax(y), np.amin(y)
     return x, y
+
+
+def ccci_index(img):
+    m_image = img[..., 4:12]
+    rgb_image = img[..., 0:3]
+    re = m_image[5, :, :]
+    mir = m_image[7, :, :]
+    r = rgb_image[:, :, 0]
+    # canopy chlorophyll content index
+    ccci = (mir - re) / (mir + re) * (mir - r) / (mir + r)
+    return ccci
 
 
 def polygons_to_mask(polygons, im_size):
