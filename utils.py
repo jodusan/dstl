@@ -5,6 +5,7 @@ import random
 import cv2
 import numpy as np
 import tifffile as tiff
+from skimage.transform import resize
 
 from config import ISZ, image_size, test_nums
 
@@ -197,15 +198,26 @@ def get_patches(img, msk, amt=10000, aug=True):
     return x, y
 
 
-def ccci_index(img):
-    m_image = img[..., 4:12]
-    rgb_image = img[..., 0:3]
-    re = m_image[:, :, 5]
-    mir = m_image[:, :, 7]
-    r = rgb_image[:, :, 0]
-    # canopy chlorophyll content index
-    ccci = (mir - re) / (mir + re) * (mir - r) / (mir + r)
-    return ccci
+def CCCI_index(id):
+    m = M(id)
+    rgb_image = rgb(id)
+    RE = resize(m[5, :, :], (rgb_image.shape[0], rgb_image.shape[1]))
+    MIR = resize(m[7, :, :], (rgb_image.shape[0], rgb_image.shape[1]))
+    R = rgb_image[:, :, 0]
+    # canopy chloropyll content index
+    CCCI = (MIR - RE) / (MIR + RE) * (MIR - R) / (MIR + R)
+    return resize(CCCI, (image_size, image_size))
+
+
+# def ccci_index(img):
+#     m_image = img[..., 4:12]
+#     rgb_image = img[..., 0:3]
+#     re = m_image[:, :, 5]
+#     mir = m_image[:, :, 7]
+#     r = rgb_image[:, :, 0]
+#     # canopy chlorophyll content index
+#     ccci = (mir - re) / (mir + re) * (mir - r) / (mir + r)
+#     return ccci
 
 
 def polygons_to_mask(polygons, im_size):
