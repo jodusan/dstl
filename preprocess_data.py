@@ -3,7 +3,7 @@ import numpy as np
 from shapely.wkt import loads as wkt_loads
 
 from utils import N_Cls, DF, stretch_n, get_patches, GS, combined_images
-from config import validation_patches, image_size, image_depth, generate_label_masks
+from config import validation_patches, image_size, image_depth, generate_label_masks, test_nums
 
 
 def stick_all_train():
@@ -16,6 +16,8 @@ def stick_all_train():
 
     x = np.zeros((5 * s, 5 * s, image_depth))  # Train sticked image
     y = np.zeros((5 * s, 5 * s, N_Cls))  # Label masks sticked image
+    t = np.zeros((len(test_nums), s, s, N_Cls))
+    t_stacked = 0
 
     ids = sorted(DF.ImageId.unique())  # All image ids
     print len(ids)
@@ -32,16 +34,20 @@ def stick_all_train():
                 # Gets a location from the sticked mask and fills it with the mask of current image
                 y[s * i:s * i + s, s * j:s * j + s, z] =\
                     generate_mask_for_image_and_class((img.shape[0], img.shape[1]), image_id, z + 1)[:s, :s]
+            if (5*i+j) in test_nums:
+                t[t_stacked] = y[s * i:s * i + s, s * j:s * j + s, :]
 
     print np.amax(y), np.amin(y)
     if generate_label_masks:
-        cv2.imwrite("views/preprocess/concat-5x5.png",x[:,:,1]*255)
+        cv2.imwrite("views/preprocess/concat-5x5.png", x[:, :, 1]*255)
         for i in range(10):
-            cv2.imwrite("views/preprocess/maska"+str(i)+".png", y[:,:,i]*255)
+            cv2.imwrite("views/preprocess/maska"+str(i)+".png", y[:, :, i]*255)
     print "Saving image to data"
     np.save('data/x_trn_%d' % N_Cls, x)
-    print "Moving parts... lol"
+    print "Saving labels to data"
     np.save('data/y_trn_%d' % N_Cls, y)
+    print "Saving test labels to data"
+    np.save('data/test_%d' % N_Cls, t)
 
 
 def make_val():

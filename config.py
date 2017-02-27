@@ -1,4 +1,4 @@
-ISZ = 128
+ISZ = 160
 smooth = 1e-12
 dice_coef_smooth = 1
 batch_size = 4
