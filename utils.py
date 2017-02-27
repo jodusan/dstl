@@ -200,9 +200,9 @@ def get_patches(img, msk, amt=10000, aug=True):
 
 def CCCI_index(id):
 
-    rgb_image = tiff.imread('../input/three_band/{}.tif'.format(id))
+    rgb_image = tiff.imread(inDir+'/three_band/{}.tif'.format(id))
     rgb_image = np.rollaxis(rgb_image, 0, 3)
-    m = tiff.imread('../input/sixteen_band/{}_M.tif'.format(id))
+    m = tiff.imread(inDir+'/sixteen_band/{}_M.tif'.format(id))
 
     RE = resize(m[5, :, :], (rgb_image.shape[0], rgb_image.shape[1]))
     MIR = resize(m[7, :, :], (rgb_image.shape[0], rgb_image.shape[1]))
