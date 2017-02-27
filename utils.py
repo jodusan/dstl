@@ -147,7 +147,7 @@ def get_patches(img, msk, amt=10000, aug=True):
 
     x, y = [], []
 
-    # Threshold for every of 10 classes
+    # Threshold for every of 10 classes TODO: promeniti na klasama koje lose predvidjamo
     tr = [0.4, 0.1, 0.1, 0.15, 0.3, 0.95, 0.1, 0.05, 0.001, 0.005]
 
     for i in range(amt):
@@ -173,7 +173,7 @@ def get_patches(img, msk, amt=10000, aug=True):
 
                 x.append(im)
                 y.append(ms)
-                # TODO: add break because it adds unnecessarly many times the same im and ms
+                # TODO: add break because it adds unnecessarily many times the same im and ms
 
     x, y = 2 * np.transpose(x, (0, 3, 1, 2)) - 1, np.transpose(y, (0, 3, 1, 2))
     print "[get_patches] Requested ", amt, " patches. Generated ", x.shape[0], " patches of size ", ISZ, "x", ISZ
