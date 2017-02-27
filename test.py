@@ -66,17 +66,23 @@ def make_test_patches(id, model, trs, label):
     x = stretch_n(img)
 
     cnv = np.zeros((image_size, image_size, image_depth)).astype(np.float32)
-    prd = np.zeros((N_Cls, image_size, image_size)).astype(np.float32)
-    
-    line = []
+    cnv[:img.shape[0], :img.shape[1], :] = x
+
+
+    # Stack image and label patches
+    patch_imgs = []
+    patch_labels = []
     for i in range(0, np.floor(image_size/ISZ).astype(np.int32)):
         for j in range(0, np.floor(image_size/ISZ).astype(np.int32)):
-            line.append(x[i * ISZ:(i + 1) * ISZ, j * ISZ:(j + 1) * ISZ])
+            patch_imgs.append(cnv[i * ISZ:(i + 1) * ISZ, j * ISZ:(j + 1) * ISZ])
+            patch_labels.append(label[ i * ISZ:(i + 1) * ISZ, j * ISZ:(j + 1) * ISZ])
 
-    line = 2*np.transpose(line, (0, 3, 1, 2))-1
 
-    tmp = model.evaluate(line, label, batch_size=4)
+    patch_imgs = 2*np.transpose(patch_imgs, (0, 3, 1, 2))-1
+    patch_labels = 2*np.transpose(patch_labels, (0,3,1,2))-1
 
+
+    tmp = model.evaluate(patch_imgs, patch_labels, batch_size=4)
     return tmp
     # # tmp = model.predict(line, batch_size=4)
     # for a in range(tmp.shape[0]):
@@ -91,13 +97,17 @@ def make_test_patches(id, model, trs, label):
 def predict_test_images(model, trs):
 
     # test_imgs = enumerate(sorted(DF.ImageId.unique())[test_nums])
-    labels = np.load('msk/test_%d.npy' % N_Cls)
+    labels = np.load('data/test_%d.npy' % N_Cls)
     test_imgs = sorted(DF.ImageId.unique())
     test_imgs = [test_imgs[i] for i in test_nums]
+    test_results = []
     for i, id in enumerate(test_imgs):
         print "[predict_test_images] Predicting image #", i, " id",  id
         msk = make_test_patches(id, model, trs, labels[i])
-        print "msk : ", msk
+        test_results.append(msk)
+    test_results = np.vstack(test_results)
+    for k, val in enumerate(np.mean(test_results, axis=0)):
+        print model.metrics_names[k], ": ", val
 
 
 def mask_to_polygons(mask, epsilon=5, min_area=1.):
