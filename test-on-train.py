@@ -14,13 +14,13 @@ def predict_train_images(model, trs):
         msk = predict_image(id, model, trs)
         large_img[:, i / 5 * image_size:i / 5 * image_size + image_size,
         i % 5 * image_size:(i % 5) * image_size + image_size] = msk
-        if i % 100 == 0:
-            print i, id
+        print i, id
     for f in range(10):
         cv2.imwrite("views/predict_test_images/ccci/" + str(f + 1) + ".png", large_img[f, :, :] * 255)
 
 
-model = get_unet()
-model.load_weights(sys.argv[1])
-score, trs = calc_jacc(model)
-predict_train_images(model, trs)
+if __name__ == '__main__':
+    model = get_unet()
+    model.load_weights(sys.argv[1])
+    score, trs = calc_jacc(model)
+    predict_train_images(model, trs)
