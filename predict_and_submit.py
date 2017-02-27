@@ -9,7 +9,7 @@ import shapely.affinity
 import shapely.wkt
 from shapely.geometry import MultiPolygon, Polygon
 
-from utils import N_Cls, M, stretch_n, SB, inDir, GS, combined_images
+from utils import N_Cls, M, stretch_n, SB, inDir, GS, combined_images, ccci_index
 from config import ISZ, image_size, image_depth
 from train_model import get_unet, calc_jacc
 
@@ -43,6 +43,10 @@ def predict_image(id, model, trs):
     # trs = [0.4, 0.1, 0.4, 0.3, 0.3, 0.5, 0.3, 0.6, 0.1, 0.1]
     for i in range(N_Cls):
         prd[i] = prd[i] > trs[i]
+
+    # Pred  ict class 7 according to CCC index
+    ccci = ccci_index(img)
+    prd[6] = (ccci > 0.11)
 
     return prd[:, :img.shape[0], :img.shape[1]]
 
