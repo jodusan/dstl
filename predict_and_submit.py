@@ -159,8 +159,9 @@ def get_scalers(im_size, x_max, y_min):
     return w_ / x_max, h_ / y_min
 
 
-model = get_unet()
-model.load_weights(sys.argv[1])
-score, trs = calc_jacc(model)
-predict_test_images(model, trs)
-make_submit()
+if __name__ == '__main__':
+    model = get_unet()
+    model.load_weights(sys.argv[1])
+    score, trs = calc_jacc(model)
+    predict_test_images(model, trs)
+    make_submit()
