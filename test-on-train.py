@@ -7,8 +7,9 @@ from train_model import get_unet, calc_jacc
 from predict_and_submit import predict_image
 
 
-def predict_test_images(model, trs):
+def predict_train_images(model, trs):
     enumerated_list = enumerate(sorted(DF.ImageId.unique()))
+    print enumerated_list, len(enumerated_list)
     large_img = np.zeros((10, image_size * 5, image_size * 5)).astype(np.float32)
     for i, id in enumerated_list:
         msk = predict_image(id, model, trs)
@@ -23,4 +24,4 @@ def predict_test_images(model, trs):
 model = get_unet()
 model.load_weights(sys.argv[1])
 score, trs = calc_jacc(model)
-predict_test_images(model, trs)
+predict_train_images(model, trs)

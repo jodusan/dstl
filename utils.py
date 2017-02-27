@@ -200,8 +200,8 @@ def get_patches(img, msk, amt=10000, aug=True):
 def ccci_index(img):
     m_image = img[..., 4:12]
     rgb_image = img[..., 0:3]
-    re = cv2.resize(m_image[5, :, :], (rgb_image.shape[0], rgb_image.shape[1]))
-    mir = cv2.resize(m_image[7, :, :], (rgb_image.shape[0], rgb_image.shape[1]))
+    re = m_image[5, :, :]
+    mir = m_image[7, :, :]
     r = rgb_image[:, :, 0]
     # canopy chlorophyll content index
     ccci = (mir - re) / (mir + re) * (mir - r) / (mir + r)
