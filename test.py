@@ -39,6 +39,7 @@ def predict_test_images(model, trs):
         print "[predict_test_images] Predicting image #", i, " id", id
         msk = make_test_patches(id, model, labels[i])
         test_results.append(msk)
+    
     test_results = np.vstack(test_results)
     for k, val in enumerate(np.mean(test_results, axis=0)):
         print model.metrics_names[k], ": ", val

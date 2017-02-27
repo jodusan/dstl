@@ -99,7 +99,7 @@ def combined_images(image_id, image_size):
     return image
 
 
-def stretch_n(bands, lower_percent=5, higher_percent=95):
+def stretch_n(bands, lower_percent=2, higher_percent=98):
     """
     Rasiri (po vrednostima) svaki band slike kako bi se videlo vise detalja,
     odseca najvisih i najnizih 5% sa default vrednostima
@@ -161,6 +161,8 @@ def get_patches(img, msk, amt=10000, aug=True):
 
             # Exclude list for testing
             exclude = test_nums
+            if len(exclude) == 0:
+                bad_coords = False
             for excl in exclude:
                 if excl / 5 * image_size - ISZ <= xc <= excl / 5 * image_size + image_size and excl % 5 * image_size - ISZ <= yc <= (
                             excl % 5) * image_size + image_size:
