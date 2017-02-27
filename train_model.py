@@ -3,7 +3,7 @@ import sys
 import numpy as np
 from keras import backend as K
 from keras.callbacks import ModelCheckpoint
-from keras.layers import Input, merge, Convolution2D, MaxPooling2D, UpSampling2D
+from keras.layers import Input, merge, Convolution2D, MaxPooling2D,BatchNormalization, UpSampling2D
 from keras.models import Model
 from keras.optimizers import Adam
 from sklearn.metrics import jaccard_similarity_score

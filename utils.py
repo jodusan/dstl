@@ -84,13 +84,13 @@ def combined_images(image_id, image_size):
 
     img_a = A(image_id)
     img_a_resize = cv2.resize(img_a, (image_size, image_size))
-
+    
     img_p = P(image_id)
     img_p_resize = cv2.resize(img_p, (image_size, image_size))
-
+    
     img_rgb = rgb(image_id)
     img_rgb_resize = cv2.resize(img_rgb, (image_size, image_size))
-
+    
     image = np.zeros((img_rgb_resize.shape[0], img_rgb_resize.shape[1], 20), 'uint8')
     image[..., 0:3] = img_rgb_resize
     image[..., 3] = img_p_resize
