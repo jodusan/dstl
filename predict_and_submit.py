@@ -45,8 +45,9 @@ def predict_image(id, model, trs):
         prd[i] = prd[i] > trs[i]
 
     # Pred  ict class 7 according to CCC index
-    ccci = CCCI_index(id)
-    prd[6] = (ccci > 0.11).astype(np.float32)
+    # TODO: uncomment if feeling lucky
+    # ccci = CCCI_index(id)
+    # prd[6] = (ccci > 0.11).astype(np.float32)
 
     return prd[:, :img.shape[0], :img.shape[1]]
 
