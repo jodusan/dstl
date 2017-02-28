@@ -7,7 +7,7 @@ import numpy as np
 import tifffile as tiff
 from skimage.transform import resize
 
-from config import ISZ, image_size, test_nums
+from config import ISZ, image_size, test_nums, image_depth, image_scale_min, image_scale_max
 
 N_Cls = 10
 inDir = 'inputs'
@@ -143,8 +143,6 @@ def get_patches(img, msk, amt=10000, aug=True):
         - y: masks of shape (N, num classes, ISZ, ISZ)
     """
     is2 = int(1.0 * ISZ)
-    xm = img.shape[0] - is2
-    ym = img.shape[1] - is2
 
     x, y = [], []
 
@@ -152,6 +150,12 @@ def get_patches(img, msk, amt=10000, aug=True):
     tr = [0.4, 0.1, 0.1, 0.15, 0.3, 0.95, 0.1, 0.05, 0.001, 0.005]
 
     for i in range(amt):
+
+        r_width = random.randint(np.floor(ISZ * image_scale_min), np.floor(ISZ * image_scale_max))
+        r_heigth = random.randint(np.floor(ISZ * image_scale_min), np.floor(ISZ * image_scale_max))
+
+        xm = img.shape[0] - r_width
+        ym = img.shape[1] - r_heigth
 
         bad_coords = True
         bad_count = 0
@@ -165,7 +169,7 @@ def get_patches(img, msk, amt=10000, aug=True):
             if len(exclude) == 0:
                 bad_coords = False
             for excl in exclude:
-                if excl / 5 * image_size - ISZ <= xc <= excl / 5 * image_size + image_size and excl % 5 * image_size - ISZ <= yc <= (
+                if excl / 5 * image_size - r_width <= xc <= excl / 5 * image_size + image_size and excl % 5 * image_size - r_heigth <= yc <= (
                             excl % 5) * image_size + image_size:
                     bad_coords = True
                     bad_count += 1
@@ -173,8 +177,10 @@ def get_patches(img, msk, amt=10000, aug=True):
                 else:
                     bad_coords = False
 
-        im = img[xc:xc + is2, yc:yc + is2]  # Get square patch starting from xc, yc
-        ms = msk[xc:xc + is2, yc:yc + is2]  # with length of is2
+        im = img[xc:xc + r_width, yc:yc + r_heigth]  # Get square patch starting from xc, yc
+        ms = msk[xc:xc + r_width, yc:yc + r_heigth]  # with length of is2
+        im = cv2.resize(im, (ISZ, ISZ))  # Resize image
+        ms = cv2.resize(ms, (ISZ, ISZ))
 
         # For every class, loop and see if it passes threshold
         for j in range(N_Cls):
@@ -201,10 +207,9 @@ def get_patches(img, msk, amt=10000, aug=True):
 
 
 def CCCI_index(id):
-
-    rgb_image = tiff.imread(inDir+'/three_band/{}.tif'.format(id))
+    rgb_image = tiff.imread(inDir + '/three_band/{}.tif'.format(id))
     rgb_image = np.rollaxis(rgb_image, 0, 3)
-    m = tiff.imread(inDir+'/sixteen_band/{}_M.tif'.format(id))
+    m = tiff.imread(inDir + '/sixteen_band/{}_M.tif'.format(id))
 
     RE = resize(m[5, :, :], (rgb_image.shape[0], rgb_image.shape[1]))
     MIR = resize(m[7, :, :], (rgb_image.shape[0], rgb_image.shape[1]))
