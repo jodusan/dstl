@@ -3,7 +3,7 @@ import sys
 import numpy as np
 from keras import backend as K
 from keras.callbacks import ModelCheckpoint
-from keras.layers import Input, merge, Convolution2D, MaxPooling2D,BatchNormalization, UpSampling2D
+from keras.layers import Input, merge, Convolution2D, MaxPooling2D,BatchNormalization, UpSampling2D, Dropout
 from keras.models import Model
 from keras.optimizers import Adam
 from sklearn.metrics import jaccard_similarity_score
@@ -100,18 +100,22 @@ def get_unet():
     conv5 = Convolution2D(512, 3, 3, activation='relu', border_mode='same')(conv5)
 
     up6 = merge([UpSampling2D(size=(2, 2))(conv5), conv4], mode='concat', concat_axis=1)
+    up6 = Dropout(0.5)(up6)
     conv6 = Convolution2D(256, 3, 3, activation='relu', border_mode='same')(up6)
     conv6 = Convolution2D(256, 3, 3, activation='relu', border_mode='same')(conv6)
 
     up7 = merge([UpSampling2D(size=(2, 2))(conv6), conv3], mode='concat', concat_axis=1)
+    up7 = Dropout(0.5)(up7)
     conv7 = Convolution2D(128, 3, 3, activation='relu', border_mode='same')(up7)
     conv7 = Convolution2D(128, 3, 3, activation='relu', border_mode='same')(conv7)
 
     up8 = merge([UpSampling2D(size=(2, 2))(conv7), conv2], mode='concat', concat_axis=1)
+    up8 = Dropout(0.5)(up8)
     conv8 = Convolution2D(64, 3, 3, activation='relu', border_mode='same')(up8)
     conv8 = Convolution2D(64, 3, 3, activation='relu', border_mode='same')(conv8)
 
     up9 = merge([UpSampling2D(size=(2, 2))(conv8), conv1], mode='concat', concat_axis=1)
+    up9 = Dropout(0.5)(up9)
     conv9 = Convolution2D(32, 3, 3, activation='relu', border_mode='same')(up9)
     conv9 = Convolution2D(32, 3, 3, activation='relu', border_mode='same')(conv9)
 
