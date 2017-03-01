@@ -1,11 +1,11 @@
-ISZ = 128
+ISZ = 32
 smooth = 1e-12
 dice_coef_smooth = 1
-batch_size = 16
+batch_size = 2
 num_epoch = 10
-validation_patches = 1000
-train_patches = 6000 
-image_size = 1024  # MUST BE DIVISIBLE BY ISZ
+validation_patches = 10
+train_patches = 20
+image_size = 256  # MUST BE DIVISIBLE BY ISZ
 image_depth = 20
 
 image_scale_max = 1.2
