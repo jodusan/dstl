@@ -160,7 +160,7 @@ def get_patches(img, msk, amt=10000, aug=True):
         bad_coords = True
         bad_count = 0
 
-        while (bad_coords):
+        while bad_coords:
             xc = random.randint(0, xm)  # Get random upper left corner of square patch
             yc = random.randint(0, ym)  # x and y values
 

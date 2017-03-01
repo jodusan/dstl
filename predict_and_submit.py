@@ -163,6 +163,7 @@ def get_scalers(im_size, x_max, y_min):
 
 if __name__ == '__main__':
     model = get_unet()
+    assert len(sys.argv) == 2, "Please provide model weights"
     model.load_weights(sys.argv[1])
     score, trs = calc_jacc(model)
     predict_test_images(model, trs)
