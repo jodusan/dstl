@@ -32,12 +32,15 @@ def train_net():
     if len(sys.argv) > 1:
         model.load_weights(sys.argv[1])
 
+    inputs = [x_trn, x_trn, x_trn, x_trn, x_trn, x_trn, x_trn, x_trn, x_trn, x_trn]
+    val_inputs = [x_val, x_val, x_val, x_val, x_val, x_val, x_val, x_val, x_val, x_val]
+
     print "[train_net] Training started with: batch size:", batch_size, "optimizer lr:", learning_rate
     model_checkpoint = ModelCheckpoint('weights/unet_tmp.hdf5', monitor='loss', save_best_only=True)
     for i in range(1):
-        model.fit([x_trn, x_trn], y_trn, batch_size=batch_size, nb_epoch=num_epoch, verbose=1,
+        model.fit(inputs, y_trn, batch_size=batch_size, nb_epoch=num_epoch, verbose=1,
                   shuffle=True,
-                  callbacks=[model_checkpoint], validation_data=([x_val, x_val], y_val))
+                  callbacks=[model_checkpoint], validation_data=(val_inputs, y_val))
         del x_trn
         del y_trn
         score, trs = calc_jacc(model, x_val, y_val)
@@ -230,7 +233,7 @@ def get_unet():
     conv9 = Convolution2D(32, 3, 3, activation='relu', border_mode='same')(up9)
     conv9 = Convolution2D(32, 3, 3, activation='relu', border_mode='same')(conv9)
 
-    conv10 = Convolution2D(5, 1, 1, activation='sigmoid')(conv9)
+    conv10 = Convolution2D(1, 1, 1, activation='sigmoid')(conv9)
 
     model = Model(input=inputs, output=conv10)
     model.compile(optimizer=optimizer, loss='binary_crossentropy',
@@ -239,9 +242,12 @@ def get_unet():
 
 
 def get_combined_model():
-    unet = get_unet()
-    road = simple_road_model()
-    third = third_network()
+    unets = []
+    for i in range(10):
+        unets.append(get_unet())
+
+    # road = simple_road_model()
+    # third = third_network()
 
     def f(x):
         a = x[0]
@@ -253,7 +259,7 @@ def get_combined_model():
         print "XXXX", x
         return x
 
-    combined_layer = Merge([unet, road], mode='concat', concat_axis=1)
+    combined_layer = Merge(unets, mode='concat', concat_axis=1)
 
     combined_model = Sequential()
     combined_model.add(combined_layer)
@@ -275,7 +281,7 @@ def calc_jacc(model, img, msk):
     # msk = np.load('data/y_tmp_%d.npy' % N_Cls)
 
     print img.shape
-    prd = model.predict([img, img], batch_size=batch_size)
+    prd = model.predict([img, img, img, img, img, img, img, img, img, img], batch_size=batch_size)
     print prd.shape, msk.shape
     avg, trs = [], []
 
