@@ -286,8 +286,8 @@ def calc_jacc(model, img, msk):
         # t_prd = t_prd.reshape(msk.shape[0] * msk.shape[2], msk.shape[3])
 
         m, b_tr = 0, 0
-        for j in range(10):
-            tr = j / 10.0
+        for j in range(100):
+            tr = j / 100.0
             pred_binary_mask = t_prd > tr
             print t_msk.shape
             jk = calc_jacc_numpy(t_msk, pred_binary_mask)
