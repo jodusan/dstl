@@ -35,9 +35,9 @@ def train_net():
     print "[train_net] Training started with: batch size:", batch_size, "optimizer lr:", learning_rate
     model_checkpoint = ModelCheckpoint('weights/unet_tmp.hdf5', monitor='loss', save_best_only=True)
     for i in range(1):
-        model.fit([x_trn, x_trn], y_trn, batch_size=batch_size, nb_epoch=num_epoch, verbose=1,
+        model.fit([x_trn, x_trn, x_trn], y_trn, batch_size=batch_size, nb_epoch=num_epoch, verbose=1,
                   shuffle=True,
-                  callbacks=[model_checkpoint], validation_data=([x_val, x_val], y_val))
+                  callbacks=[model_checkpoint], validation_data=([x_val, x_val, x_val], y_val))
         del x_trn
         del y_trn
         score, trs = calc_jacc(model, x_val, y_val)
@@ -78,6 +78,55 @@ def jaccard_coef(y_true, y_pred):
 
 def dice_coef_loss(y_true, y_pred):
     return -dice_coef(y_true, y_pred)
+
+
+def third_network():
+    inputs = Input((image_depth, ISZ, ISZ))
+    conv1 = Convolution2D(32, 3, 3, activation='relu', border_mode='same')(inputs)
+    conv1 = Convolution2D(32, 3, 3, activation='relu', border_mode='same')(conv1)
+    pool1 = MaxPooling2D(pool_size=(2, 2))(conv1)
+
+    conv2 = Convolution2D(64, 3, 3, activation='relu', border_mode='same')(pool1)
+    conv2 = Convolution2D(64, 3, 3, activation='relu', border_mode='same')(conv2)
+    pool2 = MaxPooling2D(pool_size=(2, 2))(conv2)
+
+    conv3 = Convolution2D(128, 3, 3, activation='relu', border_mode='same')(pool2)
+    conv3 = Convolution2D(128, 3, 3, activation='relu', border_mode='same')(conv3)
+    pool3 = MaxPooling2D(pool_size=(2, 2))(conv3)
+
+    conv4 = Convolution2D(256, 3, 3, activation='relu', border_mode='same')(pool3)
+    conv4 = Convolution2D(256, 3, 3, activation='relu', border_mode='same')(conv4)
+    pool4 = MaxPooling2D(pool_size=(2, 2))(conv4)
+
+    conv5 = Convolution2D(512, 3, 3, activation='relu', border_mode='same')(pool4)
+    conv5 = Convolution2D(512, 3, 3, activation='relu', border_mode='same')(conv5)
+
+    up6 = merge([UpSampling2D(size=(2, 2))(conv5), conv4], mode='concat', concat_axis=1)
+    up6 = Dropout(0.5)(up6)
+    conv6 = Convolution2D(256, 3, 3, activation='relu', border_mode='same')(up6)
+    conv6 = Convolution2D(256, 3, 3, activation='relu', border_mode='same')(conv6)
+
+    up7 = merge([UpSampling2D(size=(2, 2))(conv6), conv3], mode='concat', concat_axis=1)
+    up7 = Dropout(0.5)(up7)
+    conv7 = Convolution2D(128, 3, 3, activation='relu', border_mode='same')(up7)
+    conv7 = Convolution2D(128, 3, 3, activation='relu', border_mode='same')(conv7)
+
+    up8 = merge([UpSampling2D(size=(2, 2))(conv7), conv2], mode='concat', concat_axis=1)
+    up8 = Dropout(0.5)(up8)
+    conv8 = Convolution2D(64, 3, 3, activation='relu', border_mode='same')(up8)
+    conv8 = Convolution2D(64, 3, 3, activation='relu', border_mode='same')(conv8)
+
+    up9 = merge([UpSampling2D(size=(2, 2))(conv8), conv1], mode='concat', concat_axis=1)
+    up9 = Dropout(0.5)(up9)
+    conv9 = Convolution2D(32, 3, 3, activation='relu', border_mode='same')(up9)
+    conv9 = Convolution2D(32, 3, 3, activation='relu', border_mode='same')(conv9)
+
+    conv10 = Convolution2D(6, 1, 1, activation='sigmoid')(conv9)
+
+    model = Model(input=inputs, output=conv10)
+    model.compile(optimizer=optimizer, loss='binary_crossentropy',
+                  metrics=[jaccard_coef_loss, jaccard_coef_int])
+    return model
 
 
 def simple_road_model():
@@ -181,7 +230,7 @@ def get_unet():
     conv9 = Convolution2D(32, 3, 3, activation='relu', border_mode='same')(up9)
     conv9 = Convolution2D(32, 3, 3, activation='relu', border_mode='same')(conv9)
 
-    conv10 = Convolution2D(N_Cls, 1, 1, activation='sigmoid')(conv9)
+    conv10 = Convolution2D(2, 1, 1, activation='sigmoid')(conv9)
 
     model = Model(input=inputs, output=conv10)
     model.compile(optimizer=optimizer, loss='binary_crossentropy',
@@ -192,6 +241,7 @@ def get_unet():
 def get_combined_model():
     unet = get_unet()
     road = simple_road_model()
+    third = third_network()
 
     def f(x):
         a = x[0]
@@ -200,9 +250,10 @@ def get_combined_model():
         return r[0]
 
     def f_output(x):
-        return x[0]
+        print "XXXX", x
+        return x
 
-    combined_layer = Merge([unet, road], mode=f, output_shape=f_output)
+    combined_layer = Merge([unet, road, third], mode='concat', concat_axis=1)
 
     combined_model = Sequential()
     combined_model.add(combined_layer)
@@ -224,7 +275,7 @@ def calc_jacc(model, img, msk):
     # msk = np.load('data/y_tmp_%d.npy' % N_Cls)
 
     print img.shape
-    prd = model.predict([img, img], batch_size=batch_size)
+    prd = model.predict([img, img, img], batch_size=batch_size)
     print prd.shape, msk.shape
     avg, trs = [], []
 
