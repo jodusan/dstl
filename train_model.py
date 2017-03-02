@@ -192,7 +192,7 @@ def simple_road_model():
     # return model
 
 
-def get_unet():
+def get_unet(loss):
     inputs = Input((image_depth, ISZ, ISZ))
     conv1 = Convolution2D(32, 3, 3, activation='relu', border_mode='same')(inputs)
     conv1 = Convolution2D(32, 3, 3, activation='relu', border_mode='same')(conv1)
@@ -236,7 +236,7 @@ def get_unet():
     conv10 = Convolution2D(1, 1, 1, activation='sigmoid')(conv9)
 
     model = Model(input=inputs, output=conv10)
-    model.compile(optimizer=optimizer, loss='binary_crossentropy',
+    model.compile(optimizer=optimizer, loss=loss,
                   metrics=[jaccard_coef_loss, jaccard_coef_int])
     return model
 
@@ -244,7 +244,10 @@ def get_unet():
 def get_combined_model():
     unets = []
     for i in range(10):
-        unets.append(get_unet())
+        if i == 2 or i > 4:
+            unets.append(get_unet(jaccard_coef_loss))
+        else:
+            unets.append(get_unet('binary_crossentropy'))
 
     # road = simple_road_model()
     # third = third_network()
@@ -263,8 +266,7 @@ def get_combined_model():
 
     combined_model = Sequential()
     combined_model.add(combined_layer)
-    combined_model.compile(optimizer=optimizer, loss='binary_crossentropy',
-                           metrics=[jaccard_coef_loss, jaccard_coef_int])
+    combined_model.compile(metrics=[jaccard_coef_loss, jaccard_coef_int])
     return combined_model
 
 
