@@ -282,15 +282,15 @@ def calc_jacc(model, img, msk):
     for i in range(N_Cls):
         t_msk = msk[:, i, :, :]
         t_prd = prd[:, i, :, :]
-        #t_msk = t_msk.reshape(msk.shape[0] * msk.shape[2], msk.shape[3])
-        #t_prd = t_prd.reshape(msk.shape[0] * msk.shape[2], msk.shape[3])
+        # t_msk = t_msk.reshape(msk.shape[0] * msk.shape[2], msk.shape[3])
+        # t_prd = t_prd.reshape(msk.shape[0] * msk.shape[2], msk.shape[3])
 
         m, b_tr = 0, 0
         for j in range(10):
             tr = j / 10.0
             pred_binary_mask = t_prd > tr
             print t_msk.shape
-            jk = jaccard_coef_int(t_msk.astype(np.float32), np.array(pred_binary_mask).astype(np.float32))
+            jk = calc_jacc_numpy(t_msk, pred_binary_mask)
             if jk > m:
                 m = jk
                 b_tr = tr
@@ -319,6 +319,17 @@ def jaccard_coef_int(y_true, y_pred):
 
     jac = (intersection + smooth) / (sum_ - intersection + smooth)
     return K.mean(jac)
+
+
+def calc_jacc_numpy(y_true, y_pred):
+    pred_binary = y_pred
+    msk = y_true
+
+    intersection = np.sum(msk * pred_binary, axis=(0, -1, -2))
+    sum_ = np.sum(msk + pred_binary, axis=(0, -1, -2))
+    jrk = (intersection + smooth) / (sum_ - intersection + smooth)
+
+    return np.mean(jrk)
 
 
 if __name__ == '__main__':
