@@ -36,7 +36,7 @@ def predict_image(id, model, trs):
 
         # transposes image to feed into predict, where the dimensions are: (num_samples, depth, x, y)
         norm_patches = 2 * np.transpose(line, (0, 3, 1, 2)) - 1  # it also normalises image to [-1,1]
-        tmp = model.predict(norm_patches, batch_size=4)
+        tmp = model.predict([norm_patches, norm_patches], batch_size=4)
         for j in range(tmp.shape[0]):
             prd[:, i * ISZ:(i + 1) * ISZ, j * ISZ:(j + 1) * ISZ] = tmp[j]
 
@@ -48,7 +48,6 @@ def predict_image(id, model, trs):
     # TODO: uncomment if feeling lucky
     # ccci = CCCI_index(id)
     # prd[6] = (ccci > 0.11).astype(np.float32)
-
 
     return prd[:, :img.shape[0], :img.shape[1]]
 
