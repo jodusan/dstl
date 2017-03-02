@@ -282,15 +282,15 @@ def calc_jacc(model, img, msk):
     for i in range(N_Cls):
         t_msk = msk[:, i, :, :]
         t_prd = prd[:, i, :, :]
-        t_msk = t_msk.reshape(msk.shape[0] * msk.shape[2], msk.shape[3])
-        t_prd = t_prd.reshape(msk.shape[0] * msk.shape[2], msk.shape[3])
+        #t_msk = t_msk.reshape(msk.shape[0] * msk.shape[2], msk.shape[3])
+        #t_prd = t_prd.reshape(msk.shape[0] * msk.shape[2], msk.shape[3])
 
         m, b_tr = 0, 0
         for j in range(10):
             tr = j / 10.0
             pred_binary_mask = t_prd > tr
-
-            jk = jaccard_similarity_score(t_msk, pred_binary_mask)
+            print t_msk.shape
+            jk = jaccard_coef_int(t_msk, pred_binary_mask)
             if jk > m:
                 m = jk
                 b_tr = tr
