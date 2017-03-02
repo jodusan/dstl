@@ -289,7 +289,6 @@ def calc_jacc(model, img, msk):
         for j in range(100):
             tr = j / 100.0
             pred_binary_mask = t_prd > tr
-            print t_msk.shape
             jk = calc_jacc_numpy(t_msk, pred_binary_mask)
             if jk > m:
                 m = jk
