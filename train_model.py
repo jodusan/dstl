@@ -290,7 +290,7 @@ def calc_jacc(model, img, msk):
             tr = j / 10.0
             pred_binary_mask = t_prd > tr
             print t_msk.shape
-            jk = jaccard_coef_int(t_msk, pred_binary_mask)
+            jk = jaccard_coef_int(t_msk.astype(np.float32), np.array(pred_binary_mask).astype(np.float32))
             if jk > m:
                 m = jk
                 b_tr = tr
