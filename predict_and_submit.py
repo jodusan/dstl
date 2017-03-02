@@ -1,17 +1,17 @@
 import os
 import pandas as pd
+import shapely.affinity
+import shapely.wkt
 import sys
 from collections import defaultdict
+from shapely.geometry import MultiPolygon, Polygon
 
 import cv2
 import numpy as np
-import shapely.affinity
-import shapely.wkt
-from shapely.geometry import MultiPolygon, Polygon
 
-from utils import N_Cls, M, stretch_n, SB, inDir, GS, combined_images, CCCI_index
-from config import ISZ, image_size, image_depth
+from config import ISZ, image_size, image_depth, N_Cls
 from train_model import get_unet, calc_jacc
+from utils import stretch_n, SB, inDir, GS, combined_images
 
 
 def predict_image(id, model, trs):

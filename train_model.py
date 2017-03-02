@@ -9,9 +9,9 @@ from keras.optimizers import Adam
 from sklearn.metrics import jaccard_similarity_score
 import theano.tensor as T
 
-from utils import N_Cls, get_patches
+from utils import get_patches
 from config import ISZ, smooth, dice_coef_smooth, batch_size, num_epoch, train_patches, learning_rate, beta_1, beta_2, \
-    epsilon, image_depth
+    epsilon, image_depth, N_Cls
 
 optimizer = Adam(lr=learning_rate, beta_1=beta_1, beta_2=beta_2, epsilon=epsilon)
 

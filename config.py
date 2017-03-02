@@ -24,3 +24,4 @@ test_nums = []
 
 assert image_size % ISZ == 0, "Image size must be divisible by ISZ"
 assert image_scale_max <= (image_size / ISZ), "Max image scale must be less than or equal to image_size divided by ISZ"
+N_Cls = 10

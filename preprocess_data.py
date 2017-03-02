@@ -1,9 +1,10 @@
-import cv2
-import numpy as np
 from shapely.wkt import loads as wkt_loads
 
-from utils import N_Cls, DF, stretch_n, get_patches, GS, combined_images
-from config import validation_patches, image_size, image_depth, generate_label_masks, test_nums
+import cv2
+import numpy as np
+
+from config import validation_patches, image_size, image_depth, generate_label_masks, test_nums, N_Cls
+from utils import DF, stretch_n, get_patches, GS, combined_images
 
 
 def stick_all_train():

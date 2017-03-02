@@ -7,9 +7,8 @@ import numpy as np
 import tifffile as tiff
 from skimage.transform import resize
 
-from config import ISZ, image_size, test_nums, image_depth, image_scale_min, image_scale_max
+from config import ISZ, image_size, test_nums, image_scale_min, image_scale_max, N_Cls
 
-N_Cls = 10
 inDir = 'inputs'
 DF = pd.read_csv(inDir + '/train_wkt_v4.csv')
 GS = pd.read_csv(inDir + '/grid_sizes.csv', names=['ImageId', 'Xmax', 'Ymin'], skiprows=1)

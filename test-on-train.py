@@ -2,7 +2,7 @@ import sys
 import cv2
 import numpy as np
 from utils import DF
-from config import image_size
+from config import image_size, N_Cls
 from train_model import get_combined_model, calc_jacc
 from predict_and_submit import predict_image
 
@@ -22,5 +22,9 @@ def predict_train_images(model, trs):
 if __name__ == '__main__':
     model = get_combined_model()
     model.load_weights(sys.argv[1])
-    score, trs = calc_jacc(model)
+
+    img = np.load('data/x_tmp_%d.npy' % N_Cls)  # Opens validation dataset
+    msk = np.load('data/y_tmp_%d.npy' % N_Cls)
+
+    score, trs = calc_jacc(model, img, msk)
     predict_train_images(model, trs)
