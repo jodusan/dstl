@@ -1,10 +1,12 @@
 import sys
+
 import cv2
 import numpy as np
-from utils import DF
-from config import image_size, N_Cls
-from train_model import get_combined_model, calc_jacc
+
+from config import image_size
 from predict_and_submit import predict_image
+from train_model import default_multi_model, calc_jacc
+from utils import DF
 
 
 def predict_train_images(model, trs):
@@ -20,8 +22,8 @@ def predict_train_images(model, trs):
 
 
 if __name__ == '__main__':
-    model = get_combined_model()
-    model.load_weights(sys.argv[1])
+    model = default_multi_model()
+    model.mm_load_weights(sys.argv[1])
 
     score, trs = calc_jacc(model)
     predict_train_images(model, trs)

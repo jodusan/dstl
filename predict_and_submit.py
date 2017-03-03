@@ -10,7 +10,7 @@ import cv2
 import numpy as np
 
 from config import ISZ, image_size, image_depth, N_Cls
-from train_model import get_unet, calc_jacc
+from train_model import default_multi_model, calc_jacc
 from utils import stretch_n, SB, inDir, GS, combined_images
 
 
@@ -36,7 +36,7 @@ def predict_image(id, model, trs):
 
         # transposes image to feed into predict, where the dimensions are: (num_samples, depth, x, y)
         norm_patches = 2 * np.transpose(line, (0, 3, 1, 2)) - 1  # it also normalises image to [-1,1]
-        tmp = model.predict([norm_patches, norm_patches, norm_patches, norm_patches, norm_patches, norm_patches, norm_patches, norm_patches, norm_patches, norm_patches], batch_size=4)
+        tmp = model.mm_predict(norm_patches)
         for j in range(tmp.shape[0]):
             prd[:, i * ISZ:(i + 1) * ISZ, j * ISZ:(j + 1) * ISZ] = tmp[j]
 
@@ -161,9 +161,9 @@ def get_scalers(im_size, x_max, y_min):
 
 
 if __name__ == '__main__':
-    model = get_unet()
+    model = default_multi_model()
     assert len(sys.argv) == 2, "Please provide model weights"
-    model.load_weights(sys.argv[1])
+    model.mm_load_weights(sys.argv[1])
     score, trs = calc_jacc(model)
     predict_test_images(model, trs)
     make_submit()
