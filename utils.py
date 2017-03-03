@@ -194,6 +194,9 @@ def get_patches(img, msk, amt=10000, aug=True):
                     if random.uniform(0, 1) > 0.5:
                         im = im[:, ::-1]
                         ms = ms[:, ::-1]
+                    rot = random.randint(1, 5)
+                    im = np.rot90(im, rot, (0, 1))
+                    ms = np.rot90(ms, rot, (0, 1))
 
                 x.append(im)
                 y.append(ms)

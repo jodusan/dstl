@@ -19,7 +19,7 @@ optimizer = Adam(lr=learning_rate, beta_1=beta_1, beta_2=beta_2, epsilon=epsilon
 def default_multi_model():
     main_model = MultiModel()
     for i in range(10):
-        main_model.mm_append(get_unet('binary_crossentropy'))
+        main_model.mm_append(get_unet(jaccard_coef_loss))
     return main_model
 
 
@@ -51,6 +51,8 @@ def train_net():
         y_valid.append([y_val[:, np.newaxis, i]])
 
     main_model.mm_fit(inputs, labels, x_valid, y_valid)
+    # main_model.mm_fit_one(2, inputs, labels, x_valid, y_valid)
+
     calc_jacc(main_model, img=x_val, msk=y_val)
     return main_model
     # model_checkpoint = ModelCheckpoint('weights/unet_tmp.hdf5', monitor='loss', save_best_only=True)
@@ -243,6 +245,16 @@ class MultiModel:
     def mm_load_weights(self, path):
         for i in range(len(self.model_list)):
             self.model_list[i].load_weights(path + str(i))
+
+    def mm_fit_one(self, index, input_data, label_data, x_val, y_val):
+        print "[MultiModel - fit] Training model number: ", index + 1
+        model = self.model_list[index]
+        model_checkpoint = ModelCheckpoint('weights/unet_tmp_' + str(index) + '.hdf5', monitor='loss',
+                                           save_best_only=True)
+        model.fit(input_data, label_data, batch_size=batch_size, nb_epoch=num_epoch, verbose=1,
+                  shuffle=True,
+                  callbacks=[model_checkpoint], validation_data=(x_val, y_val))
+        model.save_weights('weights/multimodel/unet_%d_%d_mn%d' % (batch_size, num_epoch, index))
 
     def mm_fit(self, input_list, label_list, x_val_list, y_val_list):
         print "[MultiModel - fit] Starting training with: batch size:", batch_size, "optimizer lr:", learning_rate, \

@@ -2,7 +2,7 @@ ISZ = 128
 smooth = 1e-12
 dice_coef_smooth = 1
 batch_size = 2
-num_epoch = 5
+num_epoch = 10
 validation_patches = 500
 train_patches = 4000
 image_size = 1024
@@ -12,7 +12,7 @@ image_scale_max = 1.2
 image_scale_min = 0.8
 
 # optimizer parameters
-learning_rate = 0.0001
+learning_rate = 0.00005
 beta_1 = 0.9
 beta_2 = 0.999
 epsilon = 1e-07
