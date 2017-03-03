@@ -46,9 +46,9 @@ def train_net():
     y_valid = []
     for i in range(10):
         inputs.append(x_trn)
-        labels.append(y_trn[:, i])
+        labels.append([y_trn[:, np.newaxis, i]])
         x_valid.append(x_val)
-        y_valid.append(y_val[:, i])
+        y_valid.append([y_val[:, np.newaxis, i]])
 
     print "[train_net] Starting training with: batch size:", batch_size, "optimizer lr:", learning_rate, \
         "model number:", len(main_model.model_list)
