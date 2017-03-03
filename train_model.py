@@ -241,14 +241,14 @@ class MultiModel:
         self.model_list.append(model)
 
     def mm_load_weights(self, path):
-        for model in self.model_list:
-            model.load_weights(path)
+        for i in range(len(self.model_list)):
+            self.model_list[i].load_weights(path + str(i))
 
     def mm_fit(self, input_list, label_list, x_val_list, y_val_list):
         print "[train_net] Starting training with: batch size:", batch_size, "optimizer lr:", learning_rate, \
-        "model number:", len(self.model_list)
+            "model number:", len(self.model_list)
         for i in range(len(self.model_list)):
-            print "[MultiModel - fit] Training model number: ", i+1
+            print "[MultiModel - fit] Training model number: ", i + 1
             model = self.model_list[i]
             model_checkpoint = ModelCheckpoint('weights/unet_tmp_' + str(i) + '.hdf5', monitor='loss',
                                                save_best_only=True)
