@@ -55,7 +55,7 @@ def make_val():
     """
     Makes a validation dataset using patches from main image
     """
-    print "let's pick some samples for validation"
+    print "lets pick some samples for validation"
     img = np.load('data/x_trn_%d.npy' % N_Cls)
     msk = np.load('data/y_trn_%d.npy' % N_Cls)
     x, y = get_patches(img, msk, amt=validation_patches)

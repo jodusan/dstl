@@ -12,7 +12,7 @@ image_scale_max = 1.2
 image_scale_min = 0.8
 
 # optimizer parameters
-learning_rate = 0.0002
+learning_rate = 0.00001
 beta_1 = 0.9
 beta_2 = 0.999
 epsilon = 1e-07
