@@ -245,7 +245,7 @@ class MultiModel:
             self.model_list[i].load_weights(path + str(i))
 
     def mm_fit(self, input_list, label_list, x_val_list, y_val_list):
-        print "[train_net] Starting training with: batch size:", batch_size, "optimizer lr:", learning_rate, \
+        print "[MultiModel - fit] Starting training with: batch size:", batch_size, "optimizer lr:", learning_rate, \
             "model number:", len(self.model_list)
         for i in range(len(self.model_list)):
             print "[MultiModel - fit] Training model number: ", i + 1
@@ -260,9 +260,10 @@ class MultiModel:
         del input_list
 
     def mm_predict(self, image):
-        final_result = np.zeros(image.shape)
+        final_result = np.zeros((image.shape[0], N_Cls, image.shape[2], image.shape[3]))
         previous_depth = 0
         for i in range(len(self.model_list)):
+            print "[MultiModel - predict] Predicting results on model number:", i+1
             model = self.model_list[i]
             res = model.predict(image, batch_size=batch_size)
             res_depth = res.shape[1]
