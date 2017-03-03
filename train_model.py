@@ -263,7 +263,6 @@ class MultiModel:
         final_result = np.zeros((image.shape[0], N_Cls, image.shape[2], image.shape[3]))
         previous_depth = 0
         for i in range(len(self.model_list)):
-            print "[MultiModel - predict] Predicting results on model number:", i+1
             model = self.model_list[i]
             res = model.predict(image, batch_size=batch_size)
             res_depth = res.shape[1]

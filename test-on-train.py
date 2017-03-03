@@ -18,7 +18,7 @@ def predict_train_images(model, trs):
         i % 5 * image_size:(i % 5) * image_size + image_size] = msk
         print i, id
     for f in range(10):
-        cv2.imwrite("views/predict_test_images/ccci/" + str(f + 1) + ".png", large_img[f, :, :] * 255)
+        cv2.imwrite("views/predict_test_images/" + str(f + 1) + ".png", large_img[f, :, :] * 255)
 
 
 if __name__ == '__main__':
