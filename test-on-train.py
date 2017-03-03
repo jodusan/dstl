@@ -23,8 +23,5 @@ if __name__ == '__main__':
     model = get_combined_model()
     model.load_weights(sys.argv[1])
 
-    img = np.load('data/x_tmp_%d.npy' % N_Cls)  # Opens validation dataset
-    msk = np.load('data/y_tmp_%d.npy' % N_Cls)
-
-    score, trs = calc_jacc(model, img, msk)
+    score, trs = calc_jacc(model)
     predict_train_images(model, trs)

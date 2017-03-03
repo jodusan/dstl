@@ -16,6 +16,13 @@ from config import ISZ, smooth, dice_coef_smooth, batch_size, num_epoch, train_p
 optimizer = Adam(lr=learning_rate, beta_1=beta_1, beta_2=beta_2, epsilon=epsilon)
 
 
+def default_multi_model():
+    main_model = MultiModel()
+    for i in range(10):
+        main_model.mm_append(get_unet('binary_crossentropy'))
+    return main_model
+
+
 def train_net():
     """
     Loads train and validation data, gets patches and fits a model.
@@ -28,26 +35,38 @@ def train_net():
 
     x_trn, y_trn = get_patches(img, msk, amt=train_patches)
 
-    model = get_combined_model()
+    main_model = default_multi_model()
+
     if len(sys.argv) > 1:
-        model.load_weights(sys.argv[1])
+        main_model.mm_load_weights(sys.argv[1])
 
-    inputs = [x_trn, x_trn, x_trn, x_trn, x_trn, x_trn, x_trn, x_trn, x_trn, x_trn]
-    val_inputs = [x_val, x_val, x_val, x_val, x_val, x_val, x_val, x_val, x_val, x_val]
+    inputs = []
+    labels = []
+    x_valid = []
+    y_valid = []
+    for i in range(10):
+        inputs[i] = x_trn
+        labels[i] = y_trn[:, i]
+        x_valid[i] = x_val
+        y_valid[i] = y_val[:, i]
 
-    print "[train_net] Training started with: batch size:", batch_size, "optimizer lr:", learning_rate
-    model_checkpoint = ModelCheckpoint('weights/unet_tmp.hdf5', monitor='loss', save_best_only=True)
-    for i in range(1):
-        model.fit(inputs, y_trn, batch_size=batch_size, nb_epoch=num_epoch, verbose=1,
-                  shuffle=True,
-                  callbacks=[model_checkpoint], validation_data=(val_inputs, y_val))
-        del x_trn
-        del y_trn
-        score, trs = calc_jacc(model, x_val, y_val)
-        model.save_weights('weights/unet_10_%d_%d_jk%.4f' % (batch_size, num_epoch, score))
-        # x_trn, y_trn = get_patches(img, msk)
-
-    return model
+    print "[train_net] Starting training with: batch size:", batch_size, "optimizer lr:", learning_rate, \
+        "model number:", len(main_model.model_list)
+    main_model.mm_fit(inputs, labels, x_valid, y_valid)
+    calc_jacc(main_model, img=x_val, msk=y_val)
+    return main_model
+    # model_checkpoint = ModelCheckpoint('weights/unet_tmp.hdf5', monitor='loss', save_best_only=True)
+    # for i in range(1):
+    #     model.fit(inputs, y_trn, batch_size=batch_size, nb_epoch=num_epoch, verbose=1,
+    #               shuffle=True,
+    #               callbacks=[model_checkpoint], validation_data=(val_inputs, y_val))
+    #     del x_trn
+    #     del y_trn
+    #     score, trs = calc_jacc(model, x_val, y_val)
+    #     model.save_weights('weights/unet_10_%d_%d_jk%.4f' % (batch_size, num_epoch, score))
+    #     # x_trn, y_trn = get_patches(img, msk)
+    #
+    # return model
 
 
 def jaccard_coef_loss(y_true, y_pred):
@@ -82,103 +101,6 @@ def jaccard_coef(y_true, y_pred):
 def dice_coef_loss(y_true, y_pred):
     return -dice_coef(y_true, y_pred)
 
-
-def third_network():
-    inputs = Input((image_depth, ISZ, ISZ))
-    conv1 = Convolution2D(32, 3, 3, activation='relu', border_mode='same')(inputs)
-    conv1 = Convolution2D(32, 3, 3, activation='relu', border_mode='same')(conv1)
-    pool1 = MaxPooling2D(pool_size=(2, 2))(conv1)
-
-    conv2 = Convolution2D(64, 3, 3, activation='relu', border_mode='same')(pool1)
-    conv2 = Convolution2D(64, 3, 3, activation='relu', border_mode='same')(conv2)
-    pool2 = MaxPooling2D(pool_size=(2, 2))(conv2)
-
-    conv3 = Convolution2D(128, 3, 3, activation='relu', border_mode='same')(pool2)
-    conv3 = Convolution2D(128, 3, 3, activation='relu', border_mode='same')(conv3)
-    pool3 = MaxPooling2D(pool_size=(2, 2))(conv3)
-
-    conv4 = Convolution2D(256, 3, 3, activation='relu', border_mode='same')(pool3)
-    conv4 = Convolution2D(256, 3, 3, activation='relu', border_mode='same')(conv4)
-    pool4 = MaxPooling2D(pool_size=(2, 2))(conv4)
-
-    conv5 = Convolution2D(512, 3, 3, activation='relu', border_mode='same')(pool4)
-    conv5 = Convolution2D(512, 3, 3, activation='relu', border_mode='same')(conv5)
-
-    up6 = merge([UpSampling2D(size=(2, 2))(conv5), conv4], mode='concat', concat_axis=1)
-    up6 = Dropout(0.5)(up6)
-    conv6 = Convolution2D(256, 3, 3, activation='relu', border_mode='same')(up6)
-    conv6 = Convolution2D(256, 3, 3, activation='relu', border_mode='same')(conv6)
-
-    up7 = merge([UpSampling2D(size=(2, 2))(conv6), conv3], mode='concat', concat_axis=1)
-    up7 = Dropout(0.5)(up7)
-    conv7 = Convolution2D(128, 3, 3, activation='relu', border_mode='same')(up7)
-    conv7 = Convolution2D(128, 3, 3, activation='relu', border_mode='same')(conv7)
-
-    up8 = merge([UpSampling2D(size=(2, 2))(conv7), conv2], mode='concat', concat_axis=1)
-    up8 = Dropout(0.5)(up8)
-    conv8 = Convolution2D(64, 3, 3, activation='relu', border_mode='same')(up8)
-    conv8 = Convolution2D(64, 3, 3, activation='relu', border_mode='same')(conv8)
-
-    up9 = merge([UpSampling2D(size=(2, 2))(conv8), conv1], mode='concat', concat_axis=1)
-    up9 = Dropout(0.5)(up9)
-    conv9 = Convolution2D(32, 3, 3, activation='relu', border_mode='same')(up9)
-    conv9 = Convolution2D(32, 3, 3, activation='relu', border_mode='same')(conv9)
-
-    conv10 = Convolution2D(6, 1, 1, activation='sigmoid')(conv9)
-
-    model = Model(input=inputs, output=conv10)
-    model.compile(optimizer=optimizer, loss='binary_crossentropy',
-                  metrics=[jaccard_coef_loss, jaccard_coef_int])
-    return model
-
-
-def simple_road_model():
-    inputs = Input((image_depth, ISZ, ISZ))
-    conv1 = Convolution2D(32, 3, 3, activation='relu', border_mode='same')(inputs)
-    conv1 = Convolution2D(32, 3, 3, activation='relu', border_mode='same')(conv1)
-    pool1 = MaxPooling2D(pool_size=(2, 2))(conv1)
-
-    conv2 = Convolution2D(64, 3, 3, activation='relu', border_mode='same')(pool1)
-    conv2 = Convolution2D(64, 3, 3, activation='relu', border_mode='same')(conv2)
-    pool2 = MaxPooling2D(pool_size=(2, 2))(conv2)
-
-    conv3 = Convolution2D(128, 3, 3, activation='relu', border_mode='same')(pool2)
-    conv3 = Convolution2D(128, 3, 3, activation='relu', border_mode='same')(conv3)
-    pool3 = MaxPooling2D(pool_size=(2, 2))(conv3)
-
-    conv4 = Convolution2D(256, 3, 3, activation='relu', border_mode='same')(pool3)
-    conv4 = Convolution2D(256, 3, 3, activation='relu', border_mode='same')(conv4)
-    pool4 = MaxPooling2D(pool_size=(2, 2))(conv4)
-
-    conv5 = Convolution2D(512, 3, 3, activation='relu', border_mode='same')(pool4)
-    conv5 = Convolution2D(512, 3, 3, activation='relu', border_mode='same')(conv5)
-
-    up6 = merge([UpSampling2D(size=(2, 2))(conv5), conv4], mode='concat', concat_axis=1)
-    up6 = Dropout(0.5)(up6)
-    conv6 = Convolution2D(256, 3, 3, activation='relu', border_mode='same')(up6)
-    conv6 = Convolution2D(256, 3, 3, activation='relu', border_mode='same')(conv6)
-
-    up7 = merge([UpSampling2D(size=(2, 2))(conv6), conv3], mode='concat', concat_axis=1)
-    up7 = Dropout(0.5)(up7)
-    conv7 = Convolution2D(128, 3, 3, activation='relu', border_mode='same')(up7)
-    conv7 = Convolution2D(128, 3, 3, activation='relu', border_mode='same')(conv7)
-
-    up8 = merge([UpSampling2D(size=(2, 2))(conv7), conv2], mode='concat', concat_axis=1)
-    up8 = Dropout(0.5)(up8)
-    conv8 = Convolution2D(64, 3, 3, activation='relu', border_mode='same')(up8)
-    conv8 = Convolution2D(64, 3, 3, activation='relu', border_mode='same')(conv8)
-
-    up9 = merge([UpSampling2D(size=(2, 2))(conv8), conv1], mode='concat', concat_axis=1)
-    up9 = Dropout(0.5)(up9)
-    conv9 = Convolution2D(32, 3, 3, activation='relu', border_mode='same')(up9)
-    conv9 = Convolution2D(32, 3, 3, activation='relu', border_mode='same')(conv9)
-
-    conv10 = Convolution2D(5, 1, 1, activation='sigmoid')(conv9)
-
-    model = Model(input=inputs, output=conv10)
-    model.compile(optimizer=optimizer, loss='binary_crossentropy',
-                  metrics=[jaccard_coef_loss, jaccard_coef_int])
-    return model
     # inputs = Input((image_depth, ISZ, ISZ))
     # conv1 = Convolution2D(64, 3, 3, activation='relu', border_mode='same')(inputs)
     # pool1 = MaxPooling2D(pool_size=(3, 3), border_mode='same')(conv1)
@@ -241,36 +163,7 @@ def get_unet(loss):
     return model
 
 
-def get_combined_model():
-    unets = []
-    for i in range(10):
-        if i == 2 or i > 4:
-            unets.append(get_unet(jaccard_coef_loss))
-        else:
-            unets.append(get_unet('binary_crossentropy'))
-
-    # road = simple_road_model()
-    # third = third_network()
-
-    def f(x):
-        a = x[0]
-        b = x[1]
-        r = T.set_subtensor(a[:, 2:4], b)
-        return r[0]
-
-    def f_output(x):
-        print "XXXX", x
-        return x
-
-    combined_layer = Merge(unets, mode='concat', concat_axis=1)
-
-    combined_model = Sequential()
-    combined_model.add(combined_layer)
-    combined_model.compile(metrics=[jaccard_coef_loss, jaccard_coef_int])
-    return combined_model
-
-
-def calc_jacc(model, img, msk):
+def calc_jacc(model, img='load', msk='load'):
     """
     Tries to predict image from validation and returns the jacc score
     Inputs:
@@ -279,11 +172,12 @@ def calc_jacc(model, img, msk):
     - score: the average jacc score from all classes
     - trs: class thresholds
     """
-    # img = np.load('data/x_tmp_%d.npy' % N_Cls)  # Opens validation dataset
-    # msk = np.load('data/y_tmp_%d.npy' % N_Cls)
+    if img == 'load':
+        img = np.load('data/x_tmp_%d.npy' % N_Cls)  # Opens validation dataset
+    if msk == 'load':
+        msk = np.load('data/y_tmp_%d.npy' % N_Cls)
 
-    print img.shape
-    prd = model.predict([img, img, img, img, img, img, img, img, img, img], batch_size=batch_size)
+    prd = model.mm_predict(img)
     print prd.shape, msk.shape
     avg, trs = [], []
 
@@ -337,6 +231,44 @@ def calc_jacc_numpy(y_true, y_pred):
     jrk = (intersection + smooth) / (sum_ - intersection + smooth)
 
     return np.mean(jrk)
+
+
+class MultiModel:
+    def __init__(self):
+        self.model_list = []
+        self.weights_list = []
+        self.output_size_list = []
+
+    def mm_append(self, model):
+        self.model_list.append(model)
+
+    def mm_load_weights(self, path):
+        for model in self.model_list:
+            model.load_weights(path)
+
+    def mm_fit(self, input_list, label_list, x_val_list, y_val_list):
+        for i in range(len(self.model_list)):
+            print "[MultiModel - fit] Training model number: ", i
+            model = self.model_list[i]
+            model_checkpoint = ModelCheckpoint('weights/unet_tmp_' + str(i) + '.hdf5', monitor='loss',
+                                               save_best_only=True)
+            model.fit(input_list[i], label_list[i], batch_size=batch_size, nb_epoch=num_epoch, verbose=1,
+                      shuffle=True,
+                      callbacks=[model_checkpoint], validation_data=(x_val_list[i], y_val_list[i]))
+            model.save_weights('weights/multimodel/unet_%d_%d_mn%d' % (batch_size, num_epoch, i))
+        del label_list
+        del input_list
+
+    def mm_predict(self, image):
+        final_result = np.zeros(image.shape)
+        previous_depth = 0
+        for i in range(len(self.model_list)):
+            model = self.model_list[i]
+            res = model.predict(image, batch_size=batch_size)
+            res_depth = res.shape[1]
+            final_result[:, previous_depth:(res_depth + previous_depth)] = res
+            previous_depth = res_depth + previous_depth
+        return final_result
 
 
 if __name__ == '__main__':
