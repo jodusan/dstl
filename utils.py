@@ -7,7 +7,7 @@ import numpy as np
 import tifffile as tiff
 from skimage.transform import resize
 
-from config import ISZ, image_size, test_nums, image_scale_min, image_scale_max, N_Cls
+from config import ISZ, image_size, test_nums, image_scale_min, image_scale_max, N_Cls, image_depth
 
 inDir = 'inputs'
 DF = pd.read_csv(inDir + '/train_wkt_v4.csv')
@@ -205,6 +205,91 @@ def get_patches(img, msk, amt=10000, aug=True):
     x, y = 2 * np.transpose(x, (0, 3, 1, 2)) - 1, np.transpose(y, (0, 3, 1, 2))
     print "[get_patches] Requested ", amt, " patches. Generated ", x.shape[0], " patches of size ", ISZ, "x", ISZ
     # print x.shape, y.shape, np.amax(x), np.amin(x), np.amax(y), np.amin(y)
+    return x, y
+
+
+def get_class_patches(index, img, msk, augment=False, max_amount=500):
+    assert max_amount % 2 == 0, "Amount must be a pair number"
+    positive_x = []
+    negative_x = []
+    positive_y = []
+    negative_y = []
+
+    x_max = img.shape[0] / ISZ - 1
+    y_max = img.shape[1] / ISZ - 1
+
+    def aug(img_list, image):
+        img_list.append(np.rot90(image, 1, (0, 1)))
+        img_list.append(np.rot90(image, 2, (0, 1)))
+        img_list.append(np.rot90(image, 3, (0, 1)))
+        flipped = np.fliplr(image)
+        img_list.append(image)
+        img_list.append(np.rot90(flipped, 1, (0, 1)))
+        img_list.append(np.rot90(flipped, 2, (0, 1)))
+        img_list.append(np.rot90(flipped, 3, (0, 1)))
+
+    for i in range(x_max):
+        for j in range(y_max):
+            ms = msk[i * ISZ:(i + 1) * ISZ, j * ISZ:(j + 1) * ISZ, np.newaxis, index]
+            ms_coord = [i * ISZ, (i + 1) * ISZ, j * ISZ, (j + 1) * ISZ, index]
+            im_coord = [i * ISZ, (i + 1) * ISZ, j * ISZ, (j + 1) * ISZ]
+
+            if 1 in ms:
+                positive_x.append(im_coord)
+                positive_y.append(ms_coord)
+                # if augment:
+                #     aug(positive_x, im)
+                #     aug(positive_y, ms)
+            else:
+                negative_x.append(im_coord)
+                negative_y.append(ms_coord)
+                # if augment:
+                #     aug(negative_x, im)
+                #     aug(negative_y, ms)
+
+    # - x: images of shape (N, num channels, ISZ, ISZ)
+    # - y: masks of shape (N, 1, ISZ, ISZ)
+    #  - img: images of shape (W, H, num channels) (usually 4175, 4175, 8)
+    #  - msk: label masks of shape (W, H, num classes) (usually 4175, 4175, 10)
+    print len(positive_x), len(negative_x)
+    print positive_x[0]
+    print positive_y[0]
+
+    set_iter = 0
+
+    if len(positive_x) + len(negative_x) >= max_amount:  # more samples than max samples
+        x = np.empty((max_amount, image_depth, ISZ, ISZ))
+        y = np.empty((max_amount, 1, ISZ, ISZ))
+
+        element_positions_pos = random.sample(range(0, len(positive_x)), max_amount / 2)
+        element_positions_neg = random.sample(range(0, len(negative_x)), max_amount / 2)
+    elif len(positive_x) > len(negative_x):  # less negative samples
+        x = np.empty((len(negative_x)*2, image_depth, ISZ, ISZ))
+        y = np.empty((len(negative_x)*2, 1, ISZ, ISZ))
+
+        element_positions_pos = random.sample(range(0, len(positive_x)), len(negative_x))
+        element_positions_neg = range(0, len(negative_x))
+    else:  # less positive samples
+        x = np.empty((len(positive_x)*2, image_depth, ISZ, ISZ))
+        y = np.empty((len(positive_x)*2, 1, ISZ, ISZ))
+
+        element_positions_pos = range(0, len(positive_x))
+        element_positions_neg = random.sample(range(0, len(negative_x)), len(positive_x))
+
+    for i in element_positions_pos:
+        cx = positive_x[i]
+        cy = positive_y[i]
+        x[set_iter] = 2 * np.transpose(img[cx[0]:cx[1], cx[2]:cx[3]], (2, 0, 1)) - 1
+        y[set_iter] = np.transpose(msk[cy[0]:cy[1], cy[2]:cx[3], np.newaxis, cy[4]], (2, 0, 1))
+        set_iter += 1
+
+    for i in element_positions_neg:
+        cx = negative_x[i]
+        cy = negative_y[i]
+        x[set_iter] = 2 * np.transpose(img[cx[0]:cx[1], cx[2]:cx[3]], (2, 0, 1)) - 1
+        y[set_iter] = np.transpose(msk[cy[0]:cy[1], cy[2]:cx[3], np.newaxis, cy[4]], (2, 0, 1))
+        set_iter += 1
+
     return x, y
 
 
