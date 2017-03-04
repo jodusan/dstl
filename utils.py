@@ -264,30 +264,32 @@ def get_class_patches(index, img, msk, augment=False, max_amount=500):
         element_positions_pos = random.sample(range(0, len(positive_x)), min([max_amount / 2, positive_x]))
         element_positions_neg = random.sample(range(0, len(negative_x)), min([max_amount / 2, negative_x]))
     elif len(positive_x) > len(negative_x):  # less negative samples
-        x = np.empty((len(negative_x)*2, image_depth, ISZ, ISZ))
-        y = np.empty((len(negative_x)*2, 1, ISZ, ISZ))
+        x = np.empty((len(negative_x) * 2, image_depth, ISZ, ISZ))
+        y = np.empty((len(negative_x) * 2, 1, ISZ, ISZ))
 
         element_positions_pos = random.sample(range(0, len(positive_x)), len(negative_x))
         element_positions_neg = range(0, len(negative_x))
     else:  # less positive samples
-        x = np.empty((len(positive_x)*2, image_depth, ISZ, ISZ))
-        y = np.empty((len(positive_x)*2, 1, ISZ, ISZ))
+        x = np.empty((len(positive_x) * 2, image_depth, ISZ, ISZ))
+        y = np.empty((len(positive_x) * 2, 1, ISZ, ISZ))
 
         element_positions_pos = range(0, len(positive_x))
         element_positions_neg = random.sample(range(0, len(negative_x)), len(positive_x))
 
+    indices = random.sample(range(0, x.shape[0]), x.shape[0])
+
     for i in element_positions_pos:
         cx = positive_x[i]
         cy = positive_y[i]
-        x[set_iter] = 2 * np.transpose(img[cx[0]:cx[1], cx[2]:cx[3]], (2, 0, 1)) - 1
-        y[set_iter] = np.transpose(msk[cy[0]:cy[1], cy[2]:cx[3], np.newaxis, cy[4]], (2, 0, 1))
+        x[indices[set_iter]] = 2 * np.transpose(img[cx[0]:cx[1], cx[2]:cx[3]], (2, 0, 1)) - 1
+        y[indices[set_iter]] = np.transpose(msk[cy[0]:cy[1], cy[2]:cx[3], np.newaxis, cy[4]], (2, 0, 1))
         set_iter += 1
 
     for i in element_positions_neg:
         cx = negative_x[i]
         cy = negative_y[i]
-        x[set_iter] = 2 * np.transpose(img[cx[0]:cx[1], cx[2]:cx[3]], (2, 0, 1)) - 1
-        y[set_iter] = np.transpose(msk[cy[0]:cy[1], cy[2]:cx[3], np.newaxis, cy[4]], (2, 0, 1))
+        x[indices[set_iter]] = 2 * np.transpose(img[cx[0]:cx[1], cx[2]:cx[3]], (2, 0, 1)) - 1
+        y[indices[set_iter]] = np.transpose(msk[cy[0]:cy[1], cy[2]:cx[3], np.newaxis, cy[4]], (2, 0, 1))
         set_iter += 1
 
     return x, y
