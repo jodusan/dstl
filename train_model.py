@@ -34,7 +34,7 @@ def train_net():
     msk = np.load('data/y_trn_%d.npy' % N_Cls)
 
     # x_trn, y_trn = get_patches(img, msk, amt=train_patches)
-    x_trn, y_trn = get_class_patches(3, img, msk, max_amount=3000)
+    x_trn, y_trn = get_class_patches(3, img, msk, max_amount=50)
 
     main_model = default_multi_model()
 
