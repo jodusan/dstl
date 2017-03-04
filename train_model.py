@@ -9,7 +9,7 @@ from keras.optimizers import Adam
 from sklearn.metrics import jaccard_similarity_score
 import theano.tensor as T
 
-from utils import get_patches
+from utils import get_patches, get_class_patches
 from config import ISZ, smooth, dice_coef_smooth, batch_size, num_epoch, train_patches, learning_rate, beta_1, beta_2, \
     epsilon, image_depth, N_Cls
 
@@ -19,7 +19,7 @@ optimizer = Adam(lr=learning_rate, beta_1=beta_1, beta_2=beta_2, epsilon=epsilon
 def default_multi_model():
     main_model = MultiModel()
     for i in range(10):
-        main_model.mm_append(get_unet(jaccard_coef_loss))
+        main_model.mm_append(get_unet('binary_crossentropy'))
     return main_model
 
 
@@ -33,25 +33,27 @@ def train_net():
     img = np.load('data/x_trn_%d.npy' % N_Cls)
     msk = np.load('data/y_trn_%d.npy' % N_Cls)
 
-    x_trn, y_trn = get_patches(img, msk, amt=train_patches)
+    # x_trn, y_trn = get_patches(img, msk, amt=train_patches)
+    x_trn, y_trn = get_class_patches(3, img, msk, max_amount=3000)
 
     main_model = default_multi_model()
 
     if len(sys.argv) > 1:
         main_model.mm_load_weights(sys.argv[1])
 
-    inputs = []
-    labels = []
-    x_valid = []
-    y_valid = []
-    for i in range(10):
-        inputs.append(x_trn)
-        labels.append([y_trn[:, np.newaxis, i]])
-        x_valid.append(x_val)
-        y_valid.append([y_val[:, np.newaxis, i]])
+    # inputs = []
+    # labels = []
+    # x_valid = []
+    # y_valid = []
+    # for i in range(10):
+    #     inputs.append(x_trn)
+    #     labels.append([y_trn[:, np.newaxis, i]])
+    #     x_valid.append(x_val)
+    #     y_valid.append([y_val[:, np.newaxis, i]])
 
-    main_model.mm_fit(inputs, labels, x_valid, y_valid)
-    # main_model.mm_fit_one(2, inputs, labels, x_valid, y_valid)
+    main_model.mm_set_model(3, get_unet('binary_crossentropy'))
+    # main_model.mm_fit(inputs, labels, x_valid, y_valid)
+    main_model.mm_fit_one(3, x_trn, y_trn)
 
     calc_jacc(main_model, img=x_val, msk=y_val)
     return main_model
@@ -246,14 +248,20 @@ class MultiModel:
         for i in range(len(self.model_list)):
             self.model_list[i].load_weights(path + str(i))
 
-    def mm_fit_one(self, index, input_data, label_data, x_val, y_val):
+    def mm_get_model(self, i):
+        return self.model_list[i]
+
+    def mm_set_model(self, i, model):
+        self.model_list[i] = model
+
+    def mm_fit_one(self, index, input_data, label_data):
         print "[MultiModel - fit] Training model number: ", index + 1
         model = self.model_list[index]
         model_checkpoint = ModelCheckpoint('weights/unet_tmp_' + str(index) + '.hdf5', monitor='loss',
                                            save_best_only=True)
         model.fit(input_data, label_data, batch_size=batch_size, nb_epoch=num_epoch, verbose=1,
                   shuffle=True,
-                  callbacks=[model_checkpoint], validation_data=(x_val, y_val))
+                  callbacks=[model_checkpoint], validation_split=0.2)
         model.save_weights('weights/multimodel/unet_%d_%d_mn%d' % (batch_size, num_epoch, index))
 
     def mm_fit(self, input_list, label_list, x_val_list, y_val_list):

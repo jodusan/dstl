@@ -261,8 +261,8 @@ def get_class_patches(index, img, msk, augment=False, max_amount=500):
         x = np.empty((max_amount, image_depth, ISZ, ISZ))
         y = np.empty((max_amount, 1, ISZ, ISZ))
 
-        element_positions_pos = random.sample(range(0, len(positive_x)), max_amount / 2)
-        element_positions_neg = random.sample(range(0, len(negative_x)), max_amount / 2)
+        element_positions_pos = random.sample(range(0, len(positive_x)), min([max_amount / 2, positive_x]))
+        element_positions_neg = random.sample(range(0, len(negative_x)), min([max_amount / 2, negative_x]))
     elif len(positive_x) > len(negative_x):  # less negative samples
         x = np.empty((len(negative_x)*2, image_depth, ISZ, ISZ))
         y = np.empty((len(negative_x)*2, 1, ISZ, ISZ))
