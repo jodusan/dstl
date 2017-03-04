@@ -51,7 +51,7 @@ def train_net():
     #     x_valid.append(x_val)
     #     y_valid.append([y_val[:, np.newaxis, i]])
 
-    main_model.mm_set_model(3, get_unet('binary_crossentropy'))
+    main_model.mm_set_model(3, get_small_unet('binary_crossentropy'))
     # main_model.mm_fit(inputs, labels, x_valid, y_valid)
     main_model.mm_fit_one(3, x_trn, y_trn)
 
@@ -114,6 +114,26 @@ def dice_coef_loss(y_true, y_pred):
     # model.compile(optimizer=optimizer, loss='binary_crossentropy',
     #               metrics=[jaccard_coef_loss, jaccard_coef_int, dice_coef_loss])
     # return model
+
+
+def get_small_unet(loss):
+    inputs = Input((8, ISZ, ISZ))
+    conv1 = Convolution2D(8, 3, 3, activation='relu', border_mode='same', dim_ordering="th")(inputs)
+    conv1 = Convolution2D(8, 3, 3, activation='relu', border_mode='same', dim_ordering="th")(conv1)
+    pool1 = MaxPooling2D(pool_size=(2, 2), dim_ordering="th")(conv1)
+
+    conv5 = Convolution2D(16, 3, 3, activation='relu', border_mode='same', dim_ordering="th")(pool1)
+    conv5 = Convolution2D(16, 3, 3, activation='relu', border_mode='same', dim_ordering="th")(conv5)
+
+    up9 = merge([UpSampling2D(size=(2, 2), dim_ordering="th")(conv5), conv1], mode='concat', concat_axis=1)
+    conv9 = Convolution2D(8, 3, 3, activation='relu', border_mode='same', dim_ordering="th")(up9)
+    conv9 = Convolution2D(8, 3, 3, activation='relu', border_mode='same', dim_ordering="th")(conv9)
+
+    conv10 = Convolution2D(N_Cls, 1, 1, activation='sigmoid', dim_ordering="th")(conv9)
+
+    model = Model(input=inputs, output=conv10)
+    model.compile(optimizer=Adam(), loss='binary_crossentropy', metrics=[jaccard_coef, jaccard_coef_int, 'accuracy'])
+    return model
 
 
 def get_unet(loss):
