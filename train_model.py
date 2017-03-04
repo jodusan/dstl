@@ -72,7 +72,7 @@ def train_net():
 
 
 def jaccard_coef_loss(y_true, y_pred):
-    return 1 / jaccard_coef(y_true, y_pred)
+    return -jaccard_coef(y_true, y_pred)
 
 
 def dice_coef(y_true, y_pred):
