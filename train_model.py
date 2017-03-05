@@ -117,7 +117,7 @@ def dice_coef_loss(y_true, y_pred):
 
 
 def get_small_unet(loss):
-    inputs = Input((8, ISZ, ISZ))
+    inputs = Input((image_depth, ISZ, ISZ))
     conv1 = Convolution2D(8, 3, 3, activation='relu', border_mode='same', dim_ordering="th")(inputs)
     conv1 = Convolution2D(8, 3, 3, activation='relu', border_mode='same', dim_ordering="th")(conv1)
     pool1 = MaxPooling2D(pool_size=(2, 2), dim_ordering="th")(conv1)
@@ -129,7 +129,7 @@ def get_small_unet(loss):
     conv9 = Convolution2D(8, 3, 3, activation='relu', border_mode='same', dim_ordering="th")(up9)
     conv9 = Convolution2D(8, 3, 3, activation='relu', border_mode='same', dim_ordering="th")(conv9)
 
-    conv10 = Convolution2D(N_Cls, 1, 1, activation='sigmoid', dim_ordering="th")(conv9)
+    conv10 = Convolution2D(1, 1, 1, activation='sigmoid', dim_ordering="th")(conv9)
 
     model = Model(input=inputs, output=conv10)
     model.compile(optimizer=Adam(), loss='binary_crossentropy', metrics=[jaccard_coef, jaccard_coef_int, 'accuracy'])
