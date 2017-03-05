@@ -208,90 +208,139 @@ def get_patches(img, msk, amt=10000, aug=True):
     return x, y
 
 
-def get_class_patches(index, img, msk, augment=False, max_amount=500):
+def get_class_patches(index, img, msk, offset_x=0, offset_y=0, max_amount=500, validation=0):
     assert max_amount % 2 == 0, "Amount must be a pair number"
     positive_x = []
     negative_x = []
     positive_y = []
     negative_y = []
 
-    x_max = img.shape[0] / ISZ - 1
-    y_max = img.shape[1] / ISZ - 1
-
-    def aug(img_list, image):
-        img_list.append(np.rot90(image, 1, (0, 1)))
-        img_list.append(np.rot90(image, 2, (0, 1)))
-        img_list.append(np.rot90(image, 3, (0, 1)))
-        flipped = np.fliplr(image)
-        img_list.append(image)
-        img_list.append(np.rot90(flipped, 1, (0, 1)))
-        img_list.append(np.rot90(flipped, 2, (0, 1)))
-        img_list.append(np.rot90(flipped, 3, (0, 1)))
+    x_max = (img.shape[0] - offset_x) / ISZ - 1
+    y_max = (img.shape[1] - offset_y) / ISZ - 1
 
     for i in range(x_max):
         for j in range(y_max):
-            ms = msk[i * ISZ:(i + 1) * ISZ, j * ISZ:(j + 1) * ISZ, np.newaxis, index]
-            ms_coord = [i * ISZ, (i + 1) * ISZ, j * ISZ, (j + 1) * ISZ, index]
-            im_coord = [i * ISZ, (i + 1) * ISZ, j * ISZ, (j + 1) * ISZ]
+            ms = msk[i * ISZ + offset_x:(i + 1) * ISZ, j * ISZ + offset_y:(j + 1) * ISZ, np.newaxis, index]
+            ms_coord = [i * ISZ + offset_x, (i + 1) * ISZ, j * ISZ + offset_y, (j + 1) * ISZ, index]
+            im_coord = [i * ISZ + offset_x, (i + 1) * ISZ, j * ISZ + offset_y, (j + 1) * ISZ]
 
             if 1 in ms:
                 positive_x.append(im_coord)
                 positive_y.append(ms_coord)
-                # if augment:
-                #     aug(positive_x, im)
-                #     aug(positive_y, ms)
             else:
                 negative_x.append(im_coord)
                 negative_y.append(ms_coord)
-                # if augment:
-                #     aug(negative_x, im)
-                #     aug(negative_y, ms)
 
     # - x: images of shape (N, num channels, ISZ, ISZ)
     # - y: masks of shape (N, 1, ISZ, ISZ)
     #  - img: images of shape (W, H, num channels) (usually 4175, 4175, 8)
     #  - msk: label masks of shape (W, H, num classes) (usually 4175, 4175, 10)
-    print len(positive_x), len(negative_x)
-    print positive_x[0]
-    print positive_y[0]
-
-    set_iter = 0
+    print "[get_class_patches] Found", len(positive_x), "positive samples and", len(negative_x), "negative samples"
 
     if len(positive_x) + len(negative_x) >= max_amount:  # more samples than max samples
-        x = np.empty((max_amount, image_depth, ISZ, ISZ))
-        y = np.empty((max_amount, 1, ISZ, ISZ))
-
         element_positions_pos = random.sample(range(0, len(positive_x)), min([max_amount / 2, positive_x]))
         element_positions_neg = random.sample(range(0, len(negative_x)), min([max_amount / 2, negative_x]))
-    elif len(positive_x) > len(negative_x):  # less negative samples
-        x = np.empty((len(negative_x) * 2, image_depth, ISZ, ISZ))
-        y = np.empty((len(negative_x) * 2, 1, ISZ, ISZ))
-
-        element_positions_pos = random.sample(range(0, len(positive_x)), len(negative_x))
-        element_positions_neg = range(0, len(negative_x))
-    else:  # less positive samples
-        x = np.empty((len(positive_x) * 2, image_depth, ISZ, ISZ))
-        y = np.empty((len(positive_x) * 2, 1, ISZ, ISZ))
-
+    else:  # if its less get all samples
         element_positions_pos = range(0, len(positive_x))
-        element_positions_neg = random.sample(range(0, len(negative_x)), len(positive_x))
+        element_positions_neg = range(0, len(negative_x))
+
+    num_elements = len(element_positions_pos) + len(element_positions_neg)
+
+    pos_val_ind = []
+    neg_val_ind = []
+    num_elements_val = 0
+    if validation > 0:
+        pos_val_ind = random.sample(element_positions_pos,
+                                    np.floor(len(element_positions_pos) * validation).astype(np.int32))
+        neg_val_ind = random.sample(element_positions_neg,
+                                    np.floor(len(element_positions_neg) * validation).astype(np.int32))
+        num_elements = num_elements - len(pos_val_ind) - len(neg_val_ind)
+        num_elements_val = len(pos_val_ind) + len(neg_val_ind)
+
+    x = np.empty((num_elements, image_depth, ISZ, ISZ))
+    y = np.empty((num_elements, 1, ISZ, ISZ))
+    val_x = np.empty((num_elements_val, image_depth, ISZ, ISZ))
+    val_y = np.empty((num_elements_val, 1, ISZ, ISZ))
 
     indices = random.sample(range(0, x.shape[0]), x.shape[0])
+    val_indices = random.sample(range(0, val_x.shape[0]), val_x.shape[0])
+
+    set_iter = 0
+    set_iter_val = 0
 
     for i in element_positions_pos:
         cx = positive_x[i]
         cy = positive_y[i]
-        x[indices[set_iter]] = 2 * np.transpose(img[cx[0]:cx[1], cx[2]:cx[3]], (2, 0, 1)) - 1
-        y[indices[set_iter]] = np.transpose(msk[cy[0]:cy[1], cy[2]:cx[3], np.newaxis, cy[4]], (2, 0, 1))
-        set_iter += 1
+        if i in pos_val_ind:
+            val_x[val_indices[set_iter_val]] = 2 * np.transpose(img[cx[0]:cx[1], cx[2]:cx[3]], (2, 0, 1)) - 1
+            val_y[val_indices[set_iter_val]] = np.transpose(msk[cy[0]:cy[1], cy[2]:cx[3], np.newaxis, cy[4]], (2, 0, 1))
+            set_iter_val += 1
+        else:
+            x[indices[set_iter]] = 2 * np.transpose(img[cx[0]:cx[1], cx[2]:cx[3]], (2, 0, 1)) - 1
+            y[indices[set_iter]] = np.transpose(msk[cy[0]:cy[1], cy[2]:cx[3], np.newaxis, cy[4]], (2, 0, 1))
+            set_iter += 1
 
     for i in element_positions_neg:
         cx = negative_x[i]
         cy = negative_y[i]
-        x[indices[set_iter]] = 2 * np.transpose(img[cx[0]:cx[1], cx[2]:cx[3]], (2, 0, 1)) - 1
-        y[indices[set_iter]] = np.transpose(msk[cy[0]:cy[1], cy[2]:cx[3], np.newaxis, cy[4]], (2, 0, 1))
-        set_iter += 1
+        if i in neg_val_ind:
+            val_x[val_indices[set_iter_val]] = 2 * np.transpose(img[cx[0]:cx[1], cx[2]:cx[3]], (2, 0, 1)) - 1
+            val_y[val_indices[set_iter_val]] = np.transpose(msk[cy[0]:cy[1], cy[2]:cx[3], np.newaxis, cy[4]], (2, 0, 1))
+            set_iter_val += 1
+        else:
+            x[indices[set_iter]] = 2 * np.transpose(img[cx[0]:cx[1], cx[2]:cx[3]], (2, 0, 1)) - 1
+            y[indices[set_iter]] = np.transpose(msk[cy[0]:cy[1], cy[2]:cx[3], np.newaxis, cy[4]], (2, 0, 1))
+            set_iter += 1
 
+    if validation > 0:
+        print "[get_class_patches] got train patches of shape:", x.shape, "and val patches of shape:", val_x.shape
+        return x, y, val_x, val_y
+    print "[get_class_patches] got train patches of shape:", x.shape
+    return x, y
+
+
+def augment_dataset(img, msk):
+    """
+    Augment dataset by 8 times
+    Args:
+        img: image samples to augment (image_samples, num_channels, ISZ, ISZ)
+        msk: mask samples to augment (mask_samples, num_classes, ISZ, ISZ)
+    Returns:
+        x: 8*img_samples, augmented by all rotations and flips
+        y: 8*msk_samples, augmented by all rotations and flips
+    """
+    x = np.empty((img.shape[0] * 8, img.shape[1], img.shape[2], img.shape[3]))
+    y = np.empty((msk.shape[0] * 8, msk.shape[1], msk.shape[2], msk.shape[3]))
+
+    indices = random.sample(range(0, x.shape[0]), x.shape[0])
+    ind = 0
+    for i in range(img.shape[0]):
+        x[indices[ind]] = img[i]
+        y[indices[ind]] = msk[i]
+        ind += 1
+        x[indices[ind]] = np.rot90(img[i], 1, (1, 2))
+        y[indices[ind]] = np.rot90(msk[i], 1, (1, 2))
+        ind += 1
+        x[indices[ind]] = np.rot90(img[i], 2, (1, 2))
+        y[indices[ind]] = np.rot90(msk[i], 2, (1, 2))
+        ind += 1
+        x[indices[ind]] = np.rot90(img[i], 3, (1, 2))
+        y[indices[ind]] = np.rot90(msk[i], 3, (1, 2))
+        ind += 1
+        flipped = np.fliplr(img[i])
+        flipped_y = np.fliplr(msk[i])
+        x[indices[ind]] = flipped
+        y[indices[ind]] = flipped_y
+        ind += 1
+        x[indices[ind]] = np.rot90(flipped, 1, (1, 2))
+        y[indices[ind]] = np.rot90(flipped_y, 1, (1, 2))
+        ind += 1
+        x[indices[ind]] = np.rot90(flipped, 2, (1, 2))
+        y[indices[ind]] = np.rot90(flipped_y, 2, (1, 2))
+        ind += 1
+        x[indices[ind]] = np.rot90(flipped, 3, (1, 2))
+        y[indices[ind]] = np.rot90(flipped_y, 3, (1, 2))
+        ind += 1
     return x, y
 
 

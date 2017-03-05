@@ -4,7 +4,7 @@ import cv2
 import numpy as np
 
 from config import validation_patches, image_size, image_depth, generate_label_masks, test_nums, N_Cls
-from utils import DF, stretch_n, get_patches, GS, combined_images
+from utils import DF, stretch_n, get_patches, GS, combined_images, get_class_patches, augment_dataset
 
 
 def stick_all_train():
@@ -33,16 +33,16 @@ def stick_all_train():
             x[s * i:s * i + s, s * j:s * j + s, :] = img[:s, :s, :]
             for z in range(N_Cls):
                 # Gets a location from the sticked mask and fills it with the mask of current image
-                y[s * i:s * i + s, s * j:s * j + s, z] =\
+                y[s * i:s * i + s, s * j:s * j + s, z] = \
                     generate_mask_for_image_and_class((img.shape[0], img.shape[1]), image_id, z + 1)[:s, :s]
-            if (5*i+j) in test_nums:
+            if (5 * i + j) in test_nums:
                 t[t_stacked] = y[s * i:s * i + s, s * j:s * j + s, :]
 
     print np.amax(y), np.amin(y)
     if generate_label_masks:
-        cv2.imwrite("views/preprocess/concat-5x5.png", x[:, :, 1]*255)
+        cv2.imwrite("views/preprocess/concat-5x5.png", x[:, :, 1] * 255)
         for i in range(10):
-            cv2.imwrite("views/preprocess/maska"+str(i)+".png", y[:, :, i]*255)
+            cv2.imwrite("views/preprocess/maska" + str(i) + ".png", y[:, :, i] * 255)
     print "Saving image to data"
     np.save('data/x_trn_%d' % N_Cls, x)
     print "Saving labels to data"
@@ -62,6 +62,31 @@ def make_val():
 
     np.save('data/x_tmp_%d' % N_Cls, x)
     np.save('data/y_tmp_%d' % N_Cls, y)
+
+
+def make_all_class_train_val(augment=False):
+    img = np.load('data/x_trn_%d.npy' % N_Cls)
+    msk = np.load('data/y_trn_%d.npy' % N_Cls)
+    print "[make_all_class_train_val] Image and mask loaded"
+    for i in range(N_Cls):
+        print "[make_all_class_train_val] Making class:", i+1
+        x, y, x_val, y_val = get_class_patches(i, img, msk, validation=0.2, max_amount=2000)
+
+        if augment:
+            x, y = augment_dataset(x, y)
+
+        np.save('data/class_datasets/x_trn_%d' % i, x)
+        np.save('data/class_datasets/y_trn_%d' % i, y)
+
+        del x, y
+
+        if augment:
+            x_val, y_val = augment_dataset(x_val, y_val)
+
+        np.save('data/class_datasets/x_val_%d' % i, x_val)
+        np.save('data/class_datasets/y_val_%d' % i, y_val)
+
+        del x_val, y_val
 
 
 def _convert_coordinates_to_raster(coords, img_size, xymax):

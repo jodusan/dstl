@@ -32,12 +32,15 @@ def train_net():
     Returns:
         - model: trained model
     """
-    x_val, y_val = np.load('data/x_tmp_%d.npy' % N_Cls), np.load('data/y_tmp_%d.npy' % N_Cls)
+    # x_val, y_val = np.load('data/x_tmp_%d.npy' % N_Cls), np.load('data/y_tmp_%d.npy' % N_Cls)
     img = np.load('data/x_trn_%d.npy' % N_Cls)
     msk = np.load('data/y_trn_%d.npy' % N_Cls)
 
     # x_trn, y_trn = get_patches(img, msk, amt=train_patches)
-    x_trn, y_trn = get_class_patches(3, img, msk, max_amount=3000)
+    x_trn, y_trn, x_val, y_val = get_class_patches(3, img, msk, max_amount=500, validation=0.2)
+
+    del img
+    del msk
 
     main_model = default_multi_model()
 
@@ -56,7 +59,7 @@ def train_net():
 
     main_model.mm_set_model(3, get_small_unet(jaccard_coef_loss))
     # main_model.mm_fit(inputs, labels, x_valid, y_valid)
-    main_model.mm_fit_one(3, x_trn, y_trn)
+    main_model.mm_fit_one(3, x_trn, y_trn, x_val, y_val)
 
     calc_jacc(main_model, img=x_val, msk=y_val)
     return main_model
@@ -277,14 +280,14 @@ class MultiModel:
     def mm_set_model(self, i, model):
         self.model_list[i] = model
 
-    def mm_fit_one(self, index, input_data, label_data):
+    def mm_fit_one(self, index, input_data, label_data, val_x, val_y):
         print "[MultiModel - fit] Training model number: ", index + 1
         model = self.model_list[index]
         model_checkpoint = ModelCheckpoint('weights/unet_tmp_' + str(index) + '.hdf5', monitor='loss',
                                            save_best_only=True)
         model.fit(input_data, label_data, batch_size=batch_size, nb_epoch=num_epoch, verbose=1,
                   shuffle=True,
-                  callbacks=[model_checkpoint], validation_split=0.2)
+                  callbacks=[model_checkpoint], validation_data=(val_x, val_y))
         model.save_weights('weights/multimodel/unet_%d_%d_mn%d' % (batch_size, num_epoch, index))
 
     def mm_fit(self, input_list, label_list, x_val_list, y_val_list):
