@@ -34,7 +34,7 @@ def train_net():
     msk = np.load('data/y_trn_%d.npy' % N_Cls)
 
     # x_trn, y_trn = get_patches(img, msk, amt=train_patches)
-    x_trn, y_trn = get_class_patches(3, img, msk, max_amount=50)
+    x_trn, y_trn = get_class_patches(3, img, msk, max_amount=3000)
 
     main_model = default_multi_model()
 
@@ -51,7 +51,7 @@ def train_net():
     #     x_valid.append(x_val)
     #     y_valid.append([y_val[:, np.newaxis, i]])
 
-    main_model.mm_set_model(3, get_small_unet('binary_crossentropy'))
+    main_model.mm_set_model(3, get_small_unet(jaccard_coef_loss))
     # main_model.mm_fit(inputs, labels, x_valid, y_valid)
     main_model.mm_fit_one(3, x_trn, y_trn)
 
@@ -132,7 +132,7 @@ def get_small_unet(loss):
     conv10 = Convolution2D(1, 1, 1, activation='sigmoid', dim_ordering="th")(conv9)
 
     model = Model(input=inputs, output=conv10)
-    model.compile(optimizer=Adam(), loss='binary_crossentropy', metrics=[jaccard_coef, jaccard_coef_int, 'accuracy'])
+    model.compile(optimizer=Adam(), loss=loss, metrics=[jaccard_coef, jaccard_coef_int, 'accuracy'])
     return model
 
 
