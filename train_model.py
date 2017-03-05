@@ -19,7 +19,10 @@ optimizer = Adam(lr=learning_rate, beta_1=beta_1, beta_2=beta_2, epsilon=epsilon
 def default_multi_model():
     main_model = MultiModel()
     for i in range(10):
-        main_model.mm_append(get_unet('binary_crossentropy'))
+        if i == 3:
+            main_model.mm_append(get_small_unet(jaccard_coef_loss))
+        else:
+            main_model.mm_append(get_unet('binary_crossentropy'))
     return main_model
 
 
