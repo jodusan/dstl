@@ -37,7 +37,7 @@ def train_net():
     msk = np.load('data/y_trn_%d.npy' % N_Cls)
 
     # x_trn, y_trn = get_patches(img, msk, amt=train_patches)
-    x_trn, y_trn, x_val, y_val = get_class_patches(3, img, msk, max_amount=500, validation=0.2)
+    x_trn, y_trn, x_val, y_val = get_class_patches(3, img, msk, max_amount=3000, validation=0.2)
 
     del img
     del msk
@@ -57,7 +57,7 @@ def train_net():
     #     x_valid.append(x_val)
     #     y_valid.append([y_val[:, np.newaxis, i]])
 
-    main_model.mm_set_model(3, get_small_unet(jaccard_coef_loss))
+    main_model.mm_set_model(3, dusanet(jaccard_coef_loss))
     # main_model.mm_fit(inputs, labels, x_valid, y_valid)
     main_model.mm_fit_one(3, x_trn, y_trn, x_val, y_val)
 
@@ -120,6 +120,21 @@ def dice_coef_loss(y_true, y_pred):
     # model.compile(optimizer=optimizer, loss='binary_crossentropy',
     #               metrics=[jaccard_coef_loss, jaccard_coef_int, dice_coef_loss])
     # return model
+
+
+def dusanet(loss):
+    # optimizer = SGD(lr=0.005, decay=0.0002, momentum=0.9, nesterov=True)
+    d_optimizer = Adam(lr=0.001, beta_1=beta_1, beta_2=beta_2, epsilon=epsilon)
+    inputs = Input((image_depth, ISZ, ISZ))
+    conv1 = Convolution2D(1500, 4, 3, activation='relu', border_mode='same')(inputs)
+    pool1 = MaxPooling2D(pool_size=(2, 2))(conv1)
+    pool1 = UpSampling2D(size=(2, 2))(pool1)
+
+    # #act = Activation('softmax')(pool1)
+    act = Convolution2D(1, 1, 1, activation='sigmoid', border_mode='same')(pool1)
+    model = Model(input=inputs, output=act)
+    model.compile(optimizer=d_optimizer, loss=loss, metrics=[jaccard_coef, jaccard_coef_int, 'accuracy'])
+    return model
 
 
 def get_small_unet(loss):
