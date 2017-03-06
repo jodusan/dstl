@@ -1,18 +1,25 @@
 import sys
 
+import cv2
 import numpy as np
 from keras import backend as K
 from keras.callbacks import ModelCheckpoint
-from keras.layers import Input, merge, Convolution2D, MaxPooling2D,BatchNormalization, UpSampling2D
+from keras.layers import Input, merge, Convolution2D, MaxPooling2D,BatchNormalization, UpSampling2D, Dropout, Dense, Flatten, Layer, InputSpec, LeakyReLU
 from keras.models import Model
-from keras.optimizers import Adam
+from keras.models import load_model
+from keras.optimizers import Adam, SGD
+from keras.layers.core import Activation
 from sklearn.metrics import jaccard_similarity_score
+from time import gmtime, strftime
 
-from utils import N_Cls, get_patches
+import keras.initializations
+
+from utils import N_Cls, get_patches, DF
 from config import ISZ, smooth, dice_coef_smooth, batch_size, num_epoch, train_patches, learning_rate, beta_1, beta_2, \
-    epsilon, image_depth
+    epsilon, image_depth, image_size
 
 optimizer = Adam(lr=learning_rate, beta_1=beta_1, beta_2=beta_2, epsilon=epsilon)
+
 
 
 def train_net():
@@ -43,7 +50,6 @@ def train_net():
         # x_trn, y_trn = get_patches(img, msk)
 
     return model
-
 
 def jaccard_coef_loss(y_true, y_pred):
     return 1 / jaccard_coef(y_true, y_pred)
@@ -100,18 +106,22 @@ def get_unet():
     conv5 = Convolution2D(512, 3, 3, activation='relu', border_mode='same')(conv5)
 
     up6 = merge([UpSampling2D(size=(2, 2))(conv5), conv4], mode='concat', concat_axis=1)
+    up6 = Dropout(0.5)(up6)
     conv6 = Convolution2D(256, 3, 3, activation='relu', border_mode='same')(up6)
     conv6 = Convolution2D(256, 3, 3, activation='relu', border_mode='same')(conv6)
 
     up7 = merge([UpSampling2D(size=(2, 2))(conv6), conv3], mode='concat', concat_axis=1)
+    up7 = Dropout(0.5)(up7)
     conv7 = Convolution2D(128, 3, 3, activation='relu', border_mode='same')(up7)
     conv7 = Convolution2D(128, 3, 3, activation='relu', border_mode='same')(conv7)
 
     up8 = merge([UpSampling2D(size=(2, 2))(conv7), conv2], mode='concat', concat_axis=1)
+    up8 = Dropout(0.5)(up8)
     conv8 = Convolution2D(64, 3, 3, activation='relu', border_mode='same')(up8)
     conv8 = Convolution2D(64, 3, 3, activation='relu', border_mode='same')(conv8)
 
     up9 = merge([UpSampling2D(size=(2, 2))(conv8), conv1], mode='concat', concat_axis=1)
+    up9 = Dropout(0.5)(up9)
     conv9 = Convolution2D(32, 3, 3, activation='relu', border_mode='same')(up9)
     conv9 = Convolution2D(32, 3, 3, activation='relu', border_mode='same')(conv9)
 
@@ -121,7 +131,6 @@ def get_unet():
     model.compile(optimizer=optimizer, loss='binary_crossentropy',
                   metrics=[jaccard_coef_loss, jaccard_coef_int, dice_coef_loss])
     return model
-
 
 def calc_jacc(model):
     """

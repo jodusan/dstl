@@ -8,11 +8,10 @@ import numpy as np
 import shapely.affinity
 import shapely.wkt
 from shapely.geometry import MultiPolygon, Polygon
-
+from keras.models import Model, load_model
 from utils import N_Cls, M, stretch_n, SB, inDir, GS, combined_images, CCCI_index
 from config import ISZ, image_size, image_depth
-from train_model import get_unet, calc_jacc
-
+from train_model import get_unet, calc_jacc, jaccard_coef, jaccard_coef_int
 
 def predict_image(id, model, trs):
     """
@@ -40,20 +39,20 @@ def predict_image(id, model, trs):
         for j in range(tmp.shape[0]):
             prd[:, i * ISZ:(i + 1) * ISZ, j * ISZ:(j + 1) * ISZ] = tmp[j]
 
-    # trs = [0.4, 0.1, 0.4, 0.3, 0.3, 0.5, 0.3, 0.6, 0.1, 0.1]
+    trs = [0.4, 0.1, 0.4, 0.3, 0.3, 0.5, 0.3, 0.6, 0.1, 0.1]
     for i in range(N_Cls):
         prd[i] = prd[i] > trs[i]
 
     # Pred  ict class 7 according to CCC index
     # TODO: uncomment if feeling lucky
-    # ccci = CCCI_index(id)
-    # prd[6] = (ccci > 0.11).astype(np.float32)
+    ccci = CCCI_index(id)
+    prd[6] = (ccci > 0.18).astype(np.float32)
 
 
     return prd[:, :img.shape[0], :img.shape[1]]
 
 
-def predict_test_images(model, trs):
+def predict_test_images(model, trs=[0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5]):
     enumerated_list = enumerate(sorted(set(SB['ImageId'].tolist())))
     for i, id in enumerated_list:
         msk = predict_image(id, model, trs)
@@ -62,7 +61,7 @@ def predict_test_images(model, trs):
             print i, id
 
 
-def mask_to_polygons(mask, epsilon=5, min_area=1.):
+def mask_to_polygons(mask, epsilon=1, min_area=1.):
     """
     Pravi (multi)poligone od output slike mreze
     Input:
@@ -162,8 +161,10 @@ def get_scalers(im_size, x_max, y_min):
 
 
 if __name__ == '__main__':
-    model = get_unet()
-    model.load_weights(sys.argv[1])
-    score, trs = calc_jacc(model)
-    predict_test_images(model, trs)
+    #model = get_unet()
+    
+    #model.load_weights(sys.argv[1])
+    model = load_model(sys.argv[1], custom_objects={'jaccard_coef': jaccard_coef, 'jaccard_coef_int': jaccard_coef_int})
+    #score, trs = calc_jacc(model)
+    predict_test_images(model)#, trs)
     make_submit()

@@ -82,6 +82,8 @@ def rgb(image_id):
 def combined_images(image_id, image_size):
     img_m = M(image_id)
     img_m_resize = cv2.resize(img_m, (image_size, image_size))
+    
+    return img_m_resize
 
     img_a = A(image_id)
     img_a_resize = cv2.resize(img_a, (image_size, image_size))
@@ -100,7 +102,7 @@ def combined_images(image_id, image_size):
     return image
 
 
-def stretch_n(bands, lower_percent=2, higher_percent=98):
+def stretch_n(bands, lower_percent=0, higher_percent=100):
     """
     Rasiri (po vrednostima) svaki band slike kako bi se videlo vise detalja,
     odseca najvisih i najnizih 5% sa default vrednostima
@@ -111,7 +113,7 @@ def stretch_n(bands, lower_percent=2, higher_percent=98):
     Returns:
     - out: Rasirena slika, HxWxBands
     """
-    out = np.zeros_like(bands).astype(np.float32)
+    out = np.zeros_like(bands, dtype=np.float32)
     n = bands.shape[2]
     for i in range(n):
         a = 0  # np.min(band)
@@ -206,11 +208,12 @@ def CCCI_index(id):
     rgb_image = np.rollaxis(rgb_image, 0, 3)
     m = tiff.imread(inDir+'/sixteen_band/{}_M.tif'.format(id))
 
-    RE = resize(m[5, :, :], (rgb_image.shape[0], rgb_image.shape[1]))
+    RE = resize(m[3, :, :], (rgb_image.shape[0], rgb_image.shape[1]))
     MIR = resize(m[7, :, :], (rgb_image.shape[0], rgb_image.shape[1]))
     R = rgb_image[:, :, 0]
     # canopy chloropyll content index
-    CCCI = (MIR - RE) / (MIR + RE) * (MIR - R) / (MIR + R)
+    #CCCI = (MIR - RE) / (MIR + RE) * (MIR - R) / (MIR + R)
+    CCCI = (RE * 1.0 - MIR * 1.0) / (RE * 1.0 + MIR * 1.0)
     return resize(CCCI, (image_size, image_size))
 
 
