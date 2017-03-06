@@ -3,7 +3,7 @@ import cv2
 import numpy as np
 from utils import DF
 from config import image_size
-from train_model import get_unet, calc_jacc
+from train_model import get_unet, calc_jacc, jaccard_coef_int
 from predict_and_submit import predict_image
 
 
@@ -16,7 +16,9 @@ def predict_train_images(model, trs):
         i % 5 * image_size:(i % 5) * image_size + image_size] = msk
         print i, id
     for f in range(10):
+        mask = cv2.imread("views/preprocess/maska" + str(f), 0)
         cv2.imwrite("views/predict_test_images/ccci/" + str(f + 1) + ".png", large_img[f, :, :] * 255)
+        print jaccard_coef_int(mask/255.0, large_img[f, :, :])
 
 
 if __name__ == '__main__':
