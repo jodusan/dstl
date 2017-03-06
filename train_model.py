@@ -156,7 +156,7 @@ def calc_jacc(model):
 
         m, b_tr = 0, 0
         for j in range(10):
-            tr = j / 10.0
+            tr = j / 100.0
             pred_binary_mask = t_prd > tr
 
             jk = jaccard_similarity_score(t_msk, pred_binary_mask)
