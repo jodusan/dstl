@@ -52,6 +52,22 @@ def train_net():
     return model
 
 
+def m_binary_crossentropy(y_true, y_pred):
+    return K.mean(K.binary_crossentropy(y_pred, y_true), axis=-1)
+
+
+def best_loss(y_true, y_pred):
+    jacc_ind = [0, 6]
+
+    loss = 0
+    for i in range(y_pred.shape[0]):
+        if i in jacc_ind:
+            loss += jaccard_coef_loss(y_true[:, i], y_pred[:, i])
+        else:
+            loss += m_binary_crossentropy(y_true[:, i], y_pred[:, i])
+    return loss
+
+
 def jaccard_coef_loss(y_true, y_pred):
     return 1 / jaccard_coef(y_true, y_pred)
 
@@ -129,7 +145,7 @@ def get_unet():
     conv10 = Convolution2D(N_Cls, 1, 1, activation='sigmoid')(conv9)
 
     model = Model(input=inputs, output=conv10)
-    model.compile(optimizer=optimizer, loss=jaccard_coef_loss,
+    model.compile(optimizer=optimizer, loss=best_loss,
                   metrics=[jaccard_coef_loss, jaccard_coef_int, dice_coef_loss])
     return model
 

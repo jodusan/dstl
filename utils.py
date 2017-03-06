@@ -7,7 +7,7 @@ import numpy as np
 import tifffile as tiff
 from skimage.transform import resize
 
-from config import ISZ, image_size, test_nums
+from config import ISZ, image_size, test_nums, image_depth
 
 N_Cls = 10
 inDir = 'inputs'
@@ -82,7 +82,7 @@ def rgb(image_id):
 def combined_images(image_id, image_size):
     img_m = M(image_id)
     img_m_resize = cv2.resize(img_m, (image_size, image_size))
-    
+
     # return img_m_resize
 
     img_a = A(image_id)
@@ -148,7 +148,7 @@ def get_patches(img, msk, amt=10000, aug=True):
     xm = img.shape[0] - is2
     ym = img.shape[1] - is2
 
-    x, y = [], []
+    coordinates = []
 
     # Threshold for every of 10 classes TODO: promeniti na klasama koje lose predvidjamo
     tr = [0.4, 0.1, 0.1, 0.15, 0.3, 0.95, 0.1, 0.05, 0.001, 0.005]
@@ -175,44 +175,51 @@ def get_patches(img, msk, amt=10000, aug=True):
                 else:
                     bad_coords = False
 
-        im = img[xc:xc + is2, yc:yc + is2]  # Get square patch starting from xc, yc
         ms = msk[xc:xc + is2, yc:yc + is2]  # with length of is2
-
+        im_coord = [xc, xc + is2, yc, yc + is2]
         # For every class, loop and see if it passes threshold
         for j in range(N_Cls):
             sm = np.sum(ms[:, :, j])
             if 1.0 * sm / is2 ** 2 > tr[j]:
-                if aug:
-                    # 0.5 chance to flip it horizontal
-                    if random.uniform(0, 1) > 0.5:
-                        im = im[::-1]
-                        ms = ms[::-1]
-                    # 0.5 chance to flip it verticaly
-                    if random.uniform(0, 1) > 0.5:
-                        im = im[:, ::-1]
-                        ms = ms[:, ::-1]
-
-                x.append(im)
-                y.append(ms)
+                coordinates.append(im_coord)
                 # TODO: add break because it adds unnecessarily many times the same im and ms
 
-    x, y = 2 * np.transpose(x, (0, 3, 1, 2)) - 1, np.transpose(y, (0, 3, 1, 2))
+    x = np.empty((len(coordinates), image_depth, ISZ, ISZ))
+    y = np.empty((len(coordinates), N_Cls, ISZ, ISZ))
+
+    for i in range(0, len(coordinates)):
+        c = coordinates[i]
+        im = img[c[0]:c[1], c[2]:c[3]]
+        ms = msk[c[0]:c[1], c[2]:c[3]]
+        if aug:
+            # 0.5 chance to flip it horizontal
+            if random.uniform(0, 1) > 0.5:
+                im = im[::-1]
+                ms = ms[::-1]
+            # 0.5 chance to flip it verticaly
+            if random.uniform(0, 1) > 0.5:
+                im = im[:, ::-1]
+                ms = ms[:, ::-1]
+        x[i] = 2 * np.transpose(im, (2, 0, 1)) - 1
+        y[i] = np.transpose(ms, (2, 0, 1))
+
+    # - x: images of shape (N, num channels, ISZ, ISZ)
+    # - y: masks of shape (N, num classes, ISZ, ISZ)
     print "[get_patches] Requested ", amt, " patches. Generated ", x.shape[0], " patches of size ", ISZ, "x", ISZ
     # print x.shape, y.shape, np.amax(x), np.amin(x), np.amax(y), np.amin(y)
     return x, y
 
 
 def CCCI_index(id):
-
-    rgb_image = tiff.imread(inDir+'/three_band/{}.tif'.format(id))
+    rgb_image = tiff.imread(inDir + '/three_band/{}.tif'.format(id))
     rgb_image = np.rollaxis(rgb_image, 0, 3)
-    m = tiff.imread(inDir+'/sixteen_band/{}_M.tif'.format(id))
+    m = tiff.imread(inDir + '/sixteen_band/{}_M.tif'.format(id))
 
     RE = resize(m[3, :, :], (rgb_image.shape[0], rgb_image.shape[1]))
     MIR = resize(m[7, :, :], (rgb_image.shape[0], rgb_image.shape[1]))
     R = rgb_image[:, :, 0]
     # canopy chloropyll content index
-    #CCCI = (MIR - RE) / (MIR + RE) * (MIR - R) / (MIR + R)
+    # CCCI = (MIR - RE) / (MIR + RE) * (MIR - R) / (MIR + R)
     CCCI = (RE * 1.0 - MIR * 1.0) / (RE * 1.0 + MIR * 1.0)
     return resize(CCCI, (image_size, image_size))
 
