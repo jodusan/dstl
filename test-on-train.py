@@ -21,7 +21,7 @@ def predict_train_images(model, trs):
 
 if __name__ == '__main__':
     model = get_unet()
-    model = load_model('unet_42quality.hdf5', custom_objects={'jaccard_coef': jaccard_coef, 'jaccard_coef_int': jaccard_coef_int})
-    #model.load_weights(sys.argv[1])
+    # model = load_model('unet_42quality.hdf5', custom_objects={'jaccard_coef': jaccard_coef, 'jaccard_coef_int': jaccard_coef_int})
+    model.load_weights(sys.argv[1])
     score, trs = calc_jacc(model)
     predict_train_images(model, trs)
