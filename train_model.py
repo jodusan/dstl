@@ -157,7 +157,7 @@ def calc_jacc(model, accuracy=10.0):
         t_prd = t_prd.reshape(msk.shape[0] * msk.shape[2], msk.shape[3])
 
         m, b_tr = 0, 0
-        for j in range(accuracy):
+        for j in range(int(accuracy)):
             tr = j / accuracy
             pred_binary_mask = t_prd > tr
 
