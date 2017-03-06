@@ -45,14 +45,14 @@ def predict_image(id, model, trs):
 
     # Pred  ict class 7 according to CCC index
     # TODO: uncomment if feeling lucky
-    ccci = CCCI_index(id)
-    prd[6] = (ccci > 0.18).astype(np.float32)
+    # ccci = CCCI_index(id)
+    # prd[6] = (ccci > 0.18).astype(np.float32)
 
 
     return prd[:, :img.shape[0], :img.shape[1]]
 
 
-def predict_test_images(model, trs=[0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5]):
+def predict_test_images(model):
     enumerated_list = enumerate(sorted(set(SB['ImageId'].tolist())))
     for i, id in enumerated_list:
         msk = predict_image(id, model, trs)
@@ -161,10 +161,10 @@ def get_scalers(im_size, x_max, y_min):
 
 
 if __name__ == '__main__':
-    #model = get_unet()
+    model = get_unet()
     
-    #model.load_weights(sys.argv[1])
-    model = load_model(sys.argv[1], custom_objects={'jaccard_coef': jaccard_coef, 'jaccard_coef_int': jaccard_coef_int})
-    #score, trs = calc_jacc(model)
-    predict_test_images(model)#, trs)
+    model.load_weights(sys.argv[1])
+    # model = load_model(sys.argv[1], custom_objects={'jaccard_coef': jaccard_coef, 'jaccard_coef_int': jaccard_coef_int})
+    score, trs = calc_jacc(model)
+    predict_test_images(model, trs)
     make_submit()

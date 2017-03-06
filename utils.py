@@ -83,7 +83,7 @@ def combined_images(image_id, image_size):
     img_m = M(image_id)
     img_m_resize = cv2.resize(img_m, (image_size, image_size))
     
-    return img_m_resize
+    # return img_m_resize
 
     img_a = A(image_id)
     img_a_resize = cv2.resize(img_a, (image_size, image_size))
