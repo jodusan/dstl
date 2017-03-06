@@ -4,7 +4,8 @@ import cv2
 import numpy as np
 from keras import backend as K
 from keras.callbacks import ModelCheckpoint
-from keras.layers import Input, merge, Convolution2D, MaxPooling2D,BatchNormalization, UpSampling2D, Dropout, Dense, Flatten, Layer, InputSpec, LeakyReLU
+from keras.layers import Input, merge, Convolution2D, MaxPooling2D, BatchNormalization, UpSampling2D, Dropout, Dense, \
+    Flatten, Layer, InputSpec, LeakyReLU
 from keras.models import Model
 from keras.models import load_model
 from keras.optimizers import Adam, SGD
@@ -19,7 +20,6 @@ from config import ISZ, smooth, dice_coef_smooth, batch_size, num_epoch, train_p
     epsilon, image_depth, image_size
 
 optimizer = Adam(lr=learning_rate, beta_1=beta_1, beta_2=beta_2, epsilon=epsilon)
-
 
 
 def train_net():
@@ -50,6 +50,7 @@ def train_net():
         # x_trn, y_trn = get_patches(img, msk)
 
     return model
+
 
 def jaccard_coef_loss(y_true, y_pred):
     return 1 / jaccard_coef(y_true, y_pred)
@@ -128,11 +129,12 @@ def get_unet():
     conv10 = Convolution2D(N_Cls, 1, 1, activation='sigmoid')(conv9)
 
     model = Model(input=inputs, output=conv10)
-    model.compile(optimizer=optimizer, loss='binary_crossentropy',
+    model.compile(optimizer=optimizer, loss=jaccard_coef_loss,
                   metrics=[jaccard_coef_loss, jaccard_coef_int, dice_coef_loss])
     return model
 
-def calc_jacc(model):
+
+def calc_jacc(model, accuracy=10.0):
     """
     Tries to predict image from validation and returns the jacc score
     Inputs:
@@ -155,8 +157,8 @@ def calc_jacc(model):
         t_prd = t_prd.reshape(msk.shape[0] * msk.shape[2], msk.shape[3])
 
         m, b_tr = 0, 0
-        for j in range(10):
-            tr = j / 100.0
+        for j in range(accuracy):
+            tr = j / accuracy
             pred_binary_mask = t_prd > tr
 
             jk = jaccard_similarity_score(t_msk, pred_binary_mask)
